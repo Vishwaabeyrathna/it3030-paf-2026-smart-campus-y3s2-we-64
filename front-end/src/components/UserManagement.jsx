@@ -70,23 +70,29 @@ export default function UserManagement() {
                 </td>
                 <td className="px-4 py-3 text-gray-500">{u.email}</td>
                 <td className="px-4 py-3">
-                  <select
-                    value={u.role}
-                    onChange={e => handleRoleChange(u.id, e.target.value)}
-                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-300"
-                  >
-                    {ROLES.map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
+                  {u.id === currentUser?.id ? (
+                    <span className="text-xs text-gray-400 px-2 py-1">{u.role}</span>
+                  ) : (
+                    <select
+                      value={u.role}
+                      onChange={e => handleRoleChange(u.id, e.target.value)}
+                      className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                    >
+                      {ROLES.map(r => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                  )}
                 </td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleDelete(u.id)}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium"
-                  >
-                    Delete
-                  </button>
+                  {u.id !== currentUser?.id && (
+                    <button
+                      onClick={() => handleDelete(u.id)}
+                      className="text-xs text-red-500 hover:text-red-700 font-medium"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
