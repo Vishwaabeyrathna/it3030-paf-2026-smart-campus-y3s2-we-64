@@ -20,11 +20,10 @@ front-end/.env.*
 # ========================
 # Environment / Secrets
 # ========================
-.env
-.env.*
 *.env
 application-local.properties
 application-secret.properties
+back-end/src/main/resources/application.properties
 
 # ========================
 # IDE / Editor
@@ -45,3 +44,5 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+config.bat
+node_modules
