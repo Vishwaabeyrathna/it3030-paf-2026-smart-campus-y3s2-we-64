@@ -25,6 +25,7 @@ front-end/.env.*
 *.env
 application-local.properties
 application-secret.properties
+back-end/src/main/resources/application.properties
 
 # ========================
 # IDE / Editor
