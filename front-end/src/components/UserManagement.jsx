@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { useAuth } from '../context/AuthContext'
 
 const ROLES = ['USER', 'ADMIN', 'TECHNICIAN']
 
@@ -8,6 +9,7 @@ function authHeaders() {
 }
 
 export default function UserManagement() {
+  const { user: currentUser, refreshUser } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -26,6 +28,8 @@ export default function UserManagement() {
       { headers: authHeaders() }
     ).then(res => {
       setUsers(prev => prev.map(u => u.id === id ? { ...u, role: res.data.role } : u))
+      // If the changed user is the currently logged-in user, refresh their session role
+      if (currentUser?.id === id) refreshUser()
     }).catch(err => {
       alert(err.response?.data?.error ?? 'Failed to update role.')
     })

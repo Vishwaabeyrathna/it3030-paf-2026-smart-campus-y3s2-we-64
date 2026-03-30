@@ -34,8 +34,21 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const refreshUser = () => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+    axios.get('http://localhost:8080/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => setUser(res.data))
+      .catch(() => {
+        localStorage.removeItem('token')
+        setUser(null)
+      })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
