@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.security;
 
+import com.smartcampus.back_end.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +19,11 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
+    private final UserRepository userRepository;
 
-    public JwtAuthFilter(JwtUtils jwtUtils) {
+    public JwtAuthFilter(JwtUtils jwtUtils, UserRepository userRepository) {
         this.jwtUtils = jwtUtils;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -31,14 +34,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if (token != null && jwtUtils.validateToken(token)) {
             String email = jwtUtils.getEmailFromToken(token);
-            String role = jwtUtils.getRoleFromToken(token);
 
-            var auth = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
-            );
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            userRepository.findByEmail(email).ifPresent(user -> {
+                String role = user.getRole().name();
+                var auth = new UsernamePasswordAuthenticationToken(
+                        email,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            });
         }
 
         filterChain.doFilter(request, response);
