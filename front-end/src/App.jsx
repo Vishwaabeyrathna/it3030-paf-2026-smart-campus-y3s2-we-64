@@ -6,6 +6,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import TechnicianDashboard from './pages/TechnicianDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
+import ResourceListPage from './pages/ResourceListPage'
+import AddResourcePage from './pages/AddResourcePage'
 
 function App() {
   return (
@@ -15,6 +17,10 @@ function App() {
 
       {/* Role-based redirect from / */}
       <Route path="/" element={<RoleRedirect />} />
+
+      {/* Resource Routes */}
+      <Route path="/resources" element={<ResourceListPage />} />
+      <Route path="/resources/new" element={<AddResourcePage />} />
 
       <Route
         path="/dashboard/user"

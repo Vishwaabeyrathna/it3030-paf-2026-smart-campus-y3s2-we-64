@@ -14,6 +14,7 @@ export default function OAuth2CallbackPage() {
     } else {
       navigate('/login', { replace: true })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
