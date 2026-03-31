@@ -1,4 +1,7 @@
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import ticketService from '../services/ticketService'
 
 function StatCard({ label, value, icon, color }) {
   const colors = {
@@ -10,7 +13,7 @@ function StatCard({ label, value, icon, color }) {
   const c = colors[color] ?? colors.blue
 
   return (
-    <div className={`${c.bg} rounded-2xl p-5 flex items-center gap-4`}>
+    <div className={`${c.bg} rounded-2xl p-5 flex items-center gap-4 transition-transform hover:scale-[1.02]`}>
       <div className={`${c.icon} rounded-xl p-3 shrink-0`}>
         <span className={`${c.text} text-xl`}>{icon}</span>
       </div>
@@ -24,37 +27,48 @@ function StatCard({ label, value, icon, color }) {
 
 export default function UserDashboard() {
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const [tickets, setTickets] = useState([])
+  const [stats, setStats] = useState({ total: 0, inProgress: 0, resolved: 0 })
+
+  useEffect(() => {
+    ticketService.getMyTickets().then(data => {
+      setTickets(data)
+      setStats({
+        total: data.length,
+        inProgress: data.filter(t => t.status === 'IN_PROGRESS').length,
+        resolved: data.filter(t => t.status === 'RESOLVED').length
+      })
+    })
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
       <aside className="w-64 bg-slate-900 flex flex-col shrink-0">
-        {/* Brand */}
         <div className="px-6 py-6 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-white font-semibold text-sm">Smart Campus</p>
-              <p className="text-slate-400 text-xs">Operations</p>
-            </div>
+             <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-500 to-blue-700 flex items-center justify-center shrink-0">
+               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+               </svg>
+             </div>
+             <div>
+               <p className="text-white font-semibold text-sm">Smart Campus</p>
+               <p className="text-slate-400 text-xs">Operations</p>
+             </div>
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-1">
           <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 mb-3">Main</p>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600/20 text-blue-300 font-medium text-sm cursor-default">
+          <Link to="/dashboard/user" className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-600/20 text-blue-300 font-medium text-sm transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             My Dashboard
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/50 font-medium text-sm transition-colors cursor-default">
+          </Link>
+          <Link to="/dashboard/user/report-incident" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/50 font-medium text-sm transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             New Request
-          </a>
+          </Link>
           <a className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/50 font-medium text-sm transition-colors cursor-default">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
             My Requests
@@ -104,30 +118,96 @@ export default function UserDashboard() {
         <div className="px-8 py-7 space-y-8">
           {/* Stat cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="My Requests"    value="—" icon="📋" color="blue" />
-            <StatCard label="In Progress"    value="—" icon="⏳" color="amber" />
-            <StatCard label="Resolved"       value="—" icon="✅" color="emerald" />
-            <StatCard label="Notifications"  value="—" icon="🔔" color="slate" />
+            <StatCard label="My Requests"    value={stats.total} icon="📋" color="blue" />
+            <StatCard label="In Progress"    value={stats.inProgress} icon="⏳" color="amber" />
+            <StatCard label="Resolved"       value={stats.resolved} icon="✅" color="emerald" />
+            <StatCard label="Notifications"  value="0" icon="🔔" color="slate" />
           </div>
 
-          {/* Recent requests placeholder */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
-            <div className="px-6 py-5 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-800">Recent Requests</h2>
-              <p className="text-slate-400 text-sm mt-0.5">Your latest submitted requests</p>
-            </div>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-                <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-800">My Maintenance Tickets</h2>
+                <p className="text-slate-400 text-sm mt-0.5">Your submitted incident reports</p>
               </div>
-              <p className="text-slate-600 font-medium">No requests yet</p>
-              <p className="text-slate-400 text-sm mt-1">Submit a request to get started</p>
-              <button className="mt-5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                New Request
-              </button>
+              <Link 
+                to="/dashboard/user/report-incident"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+              >
+                + New Ticket
+              </Link>
             </div>
+            
+            {tickets.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/50">
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Issue</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Priority</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Images</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {tickets.map(ticket => (
+                      <tr key={ticket.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-semibold text-slate-700">{ticket.category}</p>
+                          <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[200px]">{ticket.description}</p>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{ticket.resourceLocation}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${
+                            ticket.priority === 'URGENT' ? 'bg-red-100 text-red-600' :
+                            ticket.priority === 'HIGH' ? 'bg-orange-100 text-orange-600' :
+                            'bg-blue-100 text-blue-600'
+                          }`}>
+                            {ticket.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                             ticket.status === 'RESOLVED' ? 'text-emerald-600' : 
+                             ticket.status === 'IN_PROGRESS' ? 'text-amber-600' : 'text-slate-400'
+                           }`}>
+                             <span className={`w-1.5 h-1.5 rounded-full ${
+                               ticket.status === 'RESOLVED' ? 'bg-emerald-500' : 
+                               ticket.status === 'IN_PROGRESS' ? 'bg-amber-500' : 'bg-slate-300'
+                             }`}></span>
+                             {ticket.status}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex -space-x-2">
+                             {ticket.images?.map((img, i) => (
+                               <img key={i} src={img} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover" />
+                             ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <svg className="w-7 h-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <p className="text-slate-600 font-medium">No requests yet</p>
+                <p className="text-slate-400 text-sm mt-1">Submit a request to get started</p>
+                <button 
+                  onClick={() => navigate('/dashboard/user/report-incident')}
+                  className="mt-5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors"
+                >
+                  New Request
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
