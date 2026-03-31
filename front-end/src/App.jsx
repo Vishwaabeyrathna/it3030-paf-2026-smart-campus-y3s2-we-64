@@ -10,6 +10,7 @@ import ResourceListPage from './pages/ResourceListPage'
 import AddResourcePage from './pages/AddResourcePage'
 import ResourceDetailsPage from './pages/ResourceDetailsPage'
 import EditResourcePage from './pages/EditResourcePage'
+import ResourceAvailabilityPage from './pages/ResourceAvailabilityPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/resources/new" element={<AddResourcePage />} />
       <Route path="/resources/:id" element={<ResourceDetailsPage />} />
       <Route path="/resources/edit/:id" element={<EditResourcePage />} />
+      <Route path="/resources/:id/availability" element={<ResourceAvailabilityPage />} />
 
       <Route
         path="/dashboard/user"

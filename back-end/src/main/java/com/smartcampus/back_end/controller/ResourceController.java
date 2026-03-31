@@ -48,4 +48,25 @@ public class ResourceController {
     public void deleteResource(@PathVariable Long id) {
         resourceRepository.deleteById(id);
     }
+
+    @GetMapping("/{id}/availability")
+    public java.util.Map<String, Object> checkAvailability(@PathVariable Long id) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resource not found"));
+        
+        boolean isAvailable = "Available".equalsIgnoreCase(resource.getStatus());
+        String reason;
+        
+        if (isAvailable) {
+            reason = "This resource is currently marked as Available and is ready for booking or allocation.";
+        } else {
+            reason = "This resource is currently unavailable. Current status: " + resource.getStatus() + ". Please check back later.";
+        }
+        
+        return java.util.Map.of(
+            "available", isAvailable,
+            "status", resource.getStatus(),
+            "reason", reason
+        );
+    }
 }

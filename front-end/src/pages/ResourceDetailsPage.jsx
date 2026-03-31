@@ -70,12 +70,18 @@ const ResourceDetailsPage = () => {
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button 
           onClick={() => navigate('/resources')}
           style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: '4px', border: '1px solid #ccc' }}
         >
           Back to List
+        </button>
+        <button 
+          onClick={() => navigate(`/resources/${id}/availability`)}
+          style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px' }}
+        >
+          Check Availability
         </button>
         <button 
           onClick={() => navigate(`/resources/edit/${id}`)}
