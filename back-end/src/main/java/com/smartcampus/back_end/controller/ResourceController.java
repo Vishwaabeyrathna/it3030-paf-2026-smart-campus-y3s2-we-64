@@ -25,4 +25,27 @@ public class ResourceController {
     public Resource createResource(@Valid @RequestBody Resource resource) {
         return resourceRepository.save(resource);
     }
+
+    @GetMapping("/{id}")
+    public Resource getResourceById(@PathVariable Long id) {
+        return resourceRepository.findById(id).orElseThrow(() -> new RuntimeException("Resource not found"));
+    }
+
+    @PutMapping("/{id}")
+    public Resource updateResource(@PathVariable Long id, @Valid @RequestBody Resource resourceDetails) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resource not found"));
+
+        resource.setName(resourceDetails.getName());
+        resource.setType(resourceDetails.getType());
+        resource.setCapacity(resourceDetails.getCapacity());
+        resource.setStatus(resourceDetails.getStatus());
+
+        return resourceRepository.save(resource);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteResource(@PathVariable Long id) {
+        resourceRepository.deleteById(id);
+    }
 }

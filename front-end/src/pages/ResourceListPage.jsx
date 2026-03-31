@@ -89,8 +89,16 @@ const ResourceListPage = () => {
                   </span>
                 </td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
-                  <button style={{ marginRight: '8px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>View Details</button>
-                  <button style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px' }}>Edit</button>
+                  <button 
+                    onClick={() => navigate(`/resources/${resource.id}`)}
+                    style={{ marginRight: '8px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
+                    View Details
+                  </button>
+                  <button 
+                    onClick={() => navigate(`/resources/edit/${resource.id}`)}
+                    style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px' }}>
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))

@@ -8,6 +8,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
 import ResourceListPage from './pages/ResourceListPage'
 import AddResourcePage from './pages/AddResourcePage'
+import ResourceDetailsPage from './pages/ResourceDetailsPage'
+import EditResourcePage from './pages/EditResourcePage'
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
       {/* Resource Routes */}
       <Route path="/resources" element={<ResourceListPage />} />
       <Route path="/resources/new" element={<AddResourcePage />} />
+      <Route path="/resources/:id" element={<ResourceDetailsPage />} />
+      <Route path="/resources/edit/:id" element={<EditResourcePage />} />
 
       <Route
         path="/dashboard/user"
