@@ -80,4 +80,12 @@ public class TicketService {
                 .updatedAt(ticket.getUpdatedAt())
                 .build();
     }
+
+    public TicketResponseDTO updateTicketStatus(Long id, String status) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket not found with id: " + id));
+        ticket.setStatus(status);
+        IncidentTicket updatedTicket = ticketRepository.save(ticket);
+        return mapToDTO(updatedTicket);
+    }
 }
