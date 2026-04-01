@@ -46,4 +46,13 @@ public class TicketController {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return ResponseEntity.ok(ticketService.getMyTickets(user));
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TicketResponseDTO> updateTicketStatus(
+            @PathVariable Long id,
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        String status = body.get("status");
+        return ResponseEntity.ok(ticketService.updateTicketStatus(id, status));
+    }
 }
