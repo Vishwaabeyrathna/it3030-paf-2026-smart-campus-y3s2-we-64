@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import UserManagement from '../components/UserManagement'
 import TicketManagement from '../components/TicketManagement'
+import NotificationBell from '../components/NotificationBell'
 import ticketService from '../services/ticketService'
 
 function StatCard({ label, value, icon, color }) {
@@ -157,6 +158,7 @@ export default function AdminDashboard() {
                   Operational
                 </span>
               </div>
+              <NotificationBell accentColor="purple" />
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
                 Admin
               </span>

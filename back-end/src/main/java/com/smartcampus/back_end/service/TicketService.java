@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class TicketService {
 
     private final IncidentTicketRepository ticketRepository;
+    private final NotificationService notificationService;
 
     public TicketResponseDTO createTicket(CreateTicketDTO dto, User user) throws IOException {
         IncidentTicket ticket = new IncidentTicket();
@@ -45,6 +46,7 @@ public class TicketService {
         }
 
         IncidentTicket savedTicket = ticketRepository.save(ticket);
+        notificationService.notifyAdminsNewTicket(savedTicket);
         return mapToDTO(savedTicket);
     }
 
@@ -86,6 +88,7 @@ public class TicketService {
                 .orElseThrow(() -> new IllegalArgumentException("Ticket not found with id: " + id));
         ticket.setStatus(status);
         IncidentTicket updatedTicket = ticketRepository.save(ticket);
+        notificationService.notifyCreatorStatusChanged(updatedTicket, status);
         return mapToDTO(updatedTicket);
     }
 }

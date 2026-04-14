@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import ticketService from '../services/ticketService'
+import NotificationBell from '../components/NotificationBell'
 
 function StatCard({ label, value, icon, color }) {
   const colors = {
@@ -109,10 +110,13 @@ export default function UserDashboard() {
             <h1 className="text-xl font-bold text-slate-800">My Dashboard</h1>
             <p className="text-slate-400 text-sm mt-0.5">Welcome back, {user?.name?.split(' ')[0]}</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-            User
-          </span>
+          <div className="flex items-center gap-3">
+            <NotificationBell accentColor="blue" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              User
+            </span>
+          </div>
         </header>
 
         <div className="px-8 py-7 space-y-8">

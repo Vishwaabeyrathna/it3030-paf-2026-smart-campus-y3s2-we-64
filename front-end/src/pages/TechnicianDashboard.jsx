@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import NotificationBell from '../components/NotificationBell'
 
 function StatCard({ label, value, icon, color }) {
   const colors = {
@@ -132,10 +133,13 @@ export default function TechnicianDashboard() {
             <h1 className="text-xl font-bold text-slate-800">Technician Dashboard</h1>
             <p className="text-slate-400 text-sm mt-0.5">Welcome back, {user?.name?.split(' ')[0]}</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold uppercase tracking-wide">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-            Technician
-          </span>
+          <div className="flex items-center gap-3">
+            <NotificationBell accentColor="orange" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold uppercase tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+              Technician
+            </span>
+          </div>
         </header>
 
         <div className="px-8 py-7 space-y-8">
