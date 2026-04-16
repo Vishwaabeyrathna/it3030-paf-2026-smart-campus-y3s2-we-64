@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.service;
 
+import com.smartcampus.back_end.dto.BookingAnalyticsDTO;
 import com.smartcampus.back_end.dto.BookingRequestDTO;
 import com.smartcampus.back_end.dto.BookingResponseDTO;
 import com.smartcampus.back_end.dto.BookingStatusUpdateDTO;
@@ -99,6 +100,43 @@ public class BookingService {
         return bookingRepository.findAllWithFilters(statusEnum, date, resourceId).stream()
                 .map(this::toResponseDTO)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BookingAnalyticsDTO getBookingAnalytics() {
+        long approvedBookings = bookingRepository.countByStatus(BookingStatus.APPROVED);
+        long pendingBookings = bookingRepository.countByStatus(BookingStatus.PENDING);
+        long uniqueResourcesBooked = bookingRepository.countDistinctResourceId();
+
+        var topResources = bookingRepository.findResourceBookingCounts().stream()
+                .limit(5)
+                .map(entry -> {
+                    BookingAnalyticsDTO.ResourceUsage item = new BookingAnalyticsDTO.ResourceUsage();
+                    item.setResourceName(entry[0] != null ? entry[0].toString() : "Unknown");
+                    item.setBookingCount(((Number) entry[1]).longValue());
+                    return item;
+                })
+                .toList();
+
+        var peakHours = bookingRepository.findBookingCountsByHour().stream()
+                .limit(5)
+                .map(entry -> {
+                    BookingAnalyticsDTO.PeakHour item = new BookingAnalyticsDTO.PeakHour();
+                    int hour = ((Number) entry[0]).intValue();
+                    item.setHourLabel(String.format("%02d:00 - %02d:00", hour, (hour + 1) % 24));
+                    item.setBookings(((Number) entry[1]).longValue());
+                    return item;
+                })
+                .toList();
+
+        BookingAnalyticsDTO analytics = new BookingAnalyticsDTO();
+        analytics.setTotalBookings(approvedBookings);
+        analytics.setApprovedBookings(approvedBookings);
+        analytics.setPendingBookings(pendingBookings);
+        analytics.setUniqueResourcesBooked(uniqueResourcesBooked);
+        analytics.setTopResources(topResources);
+        analytics.setPeakHours(peakHours);
+        return analytics;
     }
 
     @Transactional(readOnly = true)
