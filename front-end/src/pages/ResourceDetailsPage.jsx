@@ -101,4 +101,6 @@ const ResourceDetailsPage = () => {
   );
 };
 
+export default ResourceDetailsPage;
+
 
