@@ -183,6 +183,8 @@ export default function UserDashboard() {
     { id: 'new',      label: 'Report Issue', icon: '➕' },
   ]
 
+  const navigate = useNavigate()
+
   return (
     <div className="h-screen bg-slate-900 flex font-sans overflow-hidden">
       {/* Fixed Sidebar */}
@@ -219,11 +221,14 @@ export default function UserDashboard() {
         {/* Profile Section - Strictly Fixed to Bottom */}
         <div className="p-4 shrink-0 bg-slate-900 border-t border-slate-800/50">
           <div className="bg-slate-800/40 rounded-[2rem] p-4 border border-slate-800/50 backdrop-blur-md shadow-inner">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="relative">
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex items-center gap-3 mb-4 w-full text-left hover:opacity-80 transition-opacity"
+            >
+              <div className="relative shrink-0">
                 {user?.picture
-                  ? <img src={user.picture} alt="" className="w-10 h-10 rounded-full border-2 border-slate-700" />
-                  : <div className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-black text-xs">{user?.name?.[0]}</div>
+                  ? <img src={user.picture.startsWith('http') ? user.picture : `http://localhost:8080${user.picture}`} alt="" className="w-10 h-10 rounded-full border-2 border-slate-700 object-cover" />
+                  : <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-black text-xs">{user?.name?.[0]}</div>
                 }
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-800 rounded-full"></div>
               </div>
@@ -231,9 +236,10 @@ export default function UserDashboard() {
                 <p className="text-white text-[11px] font-black truncate leading-tight">{user?.name?.split(' ')[0]}</p>
                 <p className="text-slate-500 text-[9px] font-black uppercase tracking-widest mt-1">Student</p>
               </div>
-            </div>
-            <button 
-              onClick={logout} 
+              <svg className="w-3 h-3 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            </button>
+            <button
+              onClick={logout}
               className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl bg-slate-900/50 hover:bg-red-500/10 text-slate-500 hover:text-white border border-slate-800 group transition-all"
             >
               <svg className="w-3.5 h-3.5 group-hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
