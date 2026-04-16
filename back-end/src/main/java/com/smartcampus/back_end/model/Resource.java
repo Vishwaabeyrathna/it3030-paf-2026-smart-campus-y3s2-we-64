@@ -28,4 +28,12 @@ public class Resource {
 
     @Column(nullable = false)
     private String status; // Active, Out of Service
+
+    @Column(length = 1000)
+    private String description;
+
+    private String imageUrl;
+
+    @Column(length = 1000)
+    private String amenities; // JSON or comma-separated list
 }

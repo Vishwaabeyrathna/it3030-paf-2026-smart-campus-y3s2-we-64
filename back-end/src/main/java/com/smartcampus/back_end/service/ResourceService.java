@@ -60,6 +60,9 @@ public class ResourceService {
         resource.setCapacity(resourceDetails.getCapacity());
         resource.setLocation(resourceDetails.getLocation());
         resource.setStatus(resourceDetails.getStatus());
+        resource.setDescription(resourceDetails.getDescription());
+        resource.setImageUrl(resourceDetails.getImageUrl());
+        resource.setAmenities(resourceDetails.getAmenities());
         
         return resourceRepository.save(resource);
     }

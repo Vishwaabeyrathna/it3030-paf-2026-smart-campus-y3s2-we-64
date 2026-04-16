@@ -5,27 +5,30 @@ import {
   Plus, Search, Filter, MoreHorizontal, Edit2, Trash2, 
   ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2,
   LayoutDashboard, School, Calendar, Ticket, LogOut, Menu, X,
-  Building2, Activity, AlertTriangle, AlertCircle, CheckCircle2
+  Building2, Activity, AlertTriangle, AlertCircle, CheckCircle2,
+  MapPin, Users, Box, Monitor, Sparkles, Zap, Settings, Bell, Info
 } from 'lucide-react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 
-// Utility for Tailwind classes
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+const cn = (...inputs) => inputs.filter(Boolean).join(' ');
 
-const SummaryCard = ({ title, value, icon: Icon, colorClass, loading }) => (
-  <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex items-center gap-5 transition-all hover:shadow-md">
-    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center", colorClass)}>
-      <Icon className="w-7 h-7" />
+const SummaryCard = ({ title, value, icon: Icon, colorClass, loading, trend }) => (
+  <div className="group bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex flex-col gap-6 transition-all hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
+    <div className="flex justify-between items-start">
+      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", colorClass)}>
+        <Icon className="w-7 h-7" />
+      </div>
+      {trend && (
+        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+          {trend}
+        </span>
+      )}
     </div>
-    <div className="flex-1">
-      <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+    <div>
+      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{title}</p>
       {loading ? (
-        <div className="h-7 w-16 bg-gray-100 animate-pulse rounded-lg" />
+        <div className="h-10 w-24 bg-slate-100 animate-pulse rounded-xl" />
       ) : (
-        <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+        <h3 className="text-4xl font-black text-slate-900 tracking-tight">{value}</h3>
       )}
     </div>
   </div>
@@ -42,7 +45,6 @@ const ResourceManagement = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [resourceToDelete, setResourceToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [success, setSuccess] = useState(null);
@@ -53,16 +55,14 @@ const ResourceManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:8080/api/resources/summary', { 
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         withCredentials: true 
       });
       setSummary(response.data);
     } catch (error) {
       console.error('Error fetching summary:', error);
     } finally {
-      setSummaryLoading(false);
+      setTimeout(() => setSummaryLoading(false), 400);
     }
   };
 
@@ -72,7 +72,7 @@ const ResourceManagement = () => {
       const token = localStorage.getItem('token');
       const params = {
         page,
-        size: 10,
+        size: 8,
         search: search || undefined,
         type: filters.type || undefined,
         status: filters.status || undefined,
@@ -80,9 +80,7 @@ const ResourceManagement = () => {
       
       const response = await axios.get('http://localhost:8080/api/resources', { 
         params,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         withCredentials: true 
       });
       setResources(response.data.content);
@@ -90,7 +88,7 @@ const ResourceManagement = () => {
     } catch (error) {
       console.error('Error fetching resources:', error);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 300);
     }
   }, [page, search, filters]);
 
@@ -106,281 +104,285 @@ const ResourceManagement = () => {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:8080/api/resources/${resourceToDelete.id}`, { 
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
         withCredentials: true 
       });
-      setSuccess('Resource deleted successfully');
-      await Promise.all([fetchResources(), fetchSummary()]);
-      setTimeout(() => {
-        setIsDeleteModalOpen(false);
-        setResourceToDelete(null);
-        setSuccess(null);
-      }, 1500);
+      setSuccess('Resource purged successfully');
+      fetchResources();
+      fetchSummary();
+      setTimeout(() => { setResourceToDelete(null); setSuccess(null); }, 2000);
     } catch (error) {
-      console.error('Error deleting resource:', error);
-      setError('Failed to delete resource. Please try again.');
+      setError('Failed to delete resource');
     } finally {
       setIsDeleting(false);
     }
   };
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', id: 'dashboard' },
-    { icon: School, label: 'Resources', id: 'resources', active: true },
-    { icon: Calendar, label: 'Bookings', id: 'bookings' },
-    { icon: Ticket, label: 'Tickets', id: 'tickets' },
+    { icon: LayoutDashboard, label: 'Analytics', id: 'dashboard' },
+    { icon: School, label: 'Inventory', id: 'resources', active: true },
+    { icon: Calendar, label: 'Schedule', id: 'bookings' },
+    { icon: Ticket, label: 'Support', id: 'tickets' },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50/50">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-white overflow-hidden">
       <aside className={cn(
-        "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex flex-col",
-        isSidebarOpen ? "w-64" : "w-20"
+        "bg-slate-50 border-r border-slate-100 transition-all duration-500 ease-in-out flex flex-col z-[110]",
+        isSidebarOpen ? "w-[280px]" : "w-24"
       )}>
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-            <School className="w-5 h-5 text-white" />
+        <div className="p-8 flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-600 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-lg shadow-blue-200">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
-          {isSidebarOpen && <span className="font-bold text-gray-900 truncate">Smart Campus</span>}
+          {isSidebarOpen && (
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-slate-900 text-lg">Admin<span className="text-blue-600">Hub</span></span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">v2.0 Elite</span>
+            </div>
+          )}
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 mt-4">
+        <nav className="flex-1 px-4 space-y-2 mt-8">
           {navItems.map((item) => (
             <button
               key={item.id}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300",
                 item.active 
-                  ? "bg-blue-50 text-blue-700 font-medium" 
-                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-white text-blue-600 shadow-sm border border-slate-100 font-bold scale-[1.02]" 
+                  : "text-slate-400 hover:text-slate-900 hover:bg-white"
               )}
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {isSidebarOpen && <span>{item.label}</span>}
+              <item.icon className="w-6 h-6 flex-shrink-0" />
+              {isSidebarOpen && <span className="text-sm tracking-tight">{item.label}</span>}
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors">
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {isSidebarOpen && <span>Logout</span>}
+        <div className="p-6 border-t border-slate-100">
+          <button className="w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-slate-400 hover:text-red-500 hover:bg-white transition-all shadow-sm group">
+            <LogOut className="w-6 h-6 flex-shrink-0 group-hover:-translate-x-1 transition-transform" />
+            {isSidebarOpen && <span className="text-sm font-bold">Sign Out</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between sticky top-0 z-10 shrink-0">
-          <div className="flex items-center gap-4">
+      <main className="flex-1 flex flex-col min-w-0 bg-white">
+        <header className="h-24 px-12 flex items-center justify-between sticky top-0 z-[100] bg-white border-b border-slate-50">
+          <div className="flex items-center gap-6">
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-3 hover:bg-slate-50 rounded-2xl transition-all border border-slate-100 shadow-sm"
             >
-              <Menu className="w-5 h-5 text-gray-500" />
+              {isSidebarOpen ? <X className="w-5 h-5 text-slate-400" /> : <Menu className="w-5 h-5 text-slate-400" />}
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">Resources</h1>
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">Resource Infrastructure</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Asset Management Control</p>
+            </div>
           </div>
-          <button 
-            onClick={() => navigate('/admin/resources/add')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 active:scale-95 text-sm font-bold"
-          >
-            <Plus className="w-5 h-5" />
-            Add Resource
-          </button>
+          
+          <div className="flex items-center gap-6">
+            <div className="hidden xl:flex items-center gap-2 pr-6 border-r border-slate-100">
+              <button className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all">
+                <Bell className="w-5 h-5" />
+              </button>
+              <button className="p-3 text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+            <button 
+              onClick={() => navigate('/admin/resources/add')}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-[1.5rem] flex items-center gap-3 transition-all active:scale-95 shadow-xl shadow-slate-200 text-sm font-black tracking-tight"
+            >
+              <Plus className="w-5 h-5" />
+              Register Asset
+            </button>
+          </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-8 space-y-10">
-          {/* Summary Cards */}
+        <div className="flex-1 overflow-auto p-12 space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <SummaryCard 
-              title="Total Resources" 
-              value={summary.totalResources} 
-              icon={Building2} 
-              colorClass="bg-blue-50 text-blue-600" 
+              title="Global Inventory" 
+              value={summary.totalResources}
+              icon={Box}
+              colorClass="bg-blue-600 text-white"
               loading={summaryLoading}
+              trend="+2.4% MoM"
             />
             <SummaryCard 
-              title="Active Resources" 
-              value={summary.activeResources} 
-              icon={Activity} 
-              colorClass="bg-emerald-50 text-emerald-600" 
+              title="Active Capacity" 
+              value={summary.activeResources}
+              icon={Activity}
+              colorClass="bg-emerald-500 text-white"
               loading={summaryLoading}
+              trend="94% Utilization"
             />
             <SummaryCard 
-              title="Out of Service" 
-              value={summary.outOfServiceResources} 
-              icon={AlertTriangle} 
-              colorClass="bg-red-50 text-red-600" 
+              title="Offline Assets" 
+              value={summary.outOfServiceResources}
+              icon={AlertTriangle}
+              colorClass="bg-rose-500 text-white"
               loading={summaryLoading}
             />
           </div>
 
-          {/* Filters & Search */}
-          <div className="flex flex-col xl:flex-row gap-6 bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search by resource name, location..." 
-                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <div className="relative">
-                <select 
-                  className="pl-4 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm appearance-none min-w-[160px]"
-                  value={filters.type}
-                  onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                >
-                  <option value="">All Types</option>
-                  <option value="Room">Room</option>
-                  <option value="Lab">Lab</option>
-                  <option value="Equipment">Equipment</option>
-                </select>
-                <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <div className="space-y-8">
+            <div className="flex flex-col xl:flex-row gap-6 items-center">
+              <div className="relative flex-1 w-full group">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors w-6 h-6" />
+                <input
+                  type="text"
+                  placeholder="Filter by asset name, location or serial..."
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                  className="w-full pl-16 pr-8 py-5 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:bg-white focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 outline-none transition-all text-sm font-bold placeholder:text-slate-300"
+                />
               </div>
-              <div className="relative">
-                <select 
-                  className="pl-4 pr-10 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm appearance-none min-w-[160px]"
-                  value={filters.status}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                >
-                  <option value="">All Status</option>
-                  <option value="Active">Active</option>
-                  <option value="Out of Service">Out of Service</option>
-                </select>
-                <Activity className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <div className="flex items-center gap-3 w-full xl:w-auto overflow-x-auto no-scrollbar pb-2 xl:pb-0">
+                {['All', 'Room', 'Lab', 'Equipment'].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => { setFilters(f => ({ ...f, type: t === 'All' ? '' : t })); setPage(0); }}
+                    className={cn(
+                      "px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest border transition-all",
+                      (filters.type === t || (t === 'All' && !filters.type)) 
+                        ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-200" 
+                        : "bg-white border-slate-100 text-slate-400 hover:border-slate-300"
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Table Container */}
-          <div className="bg-white rounded-[32px] border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50/50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Resource Name</th>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Type</th>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Capacity</th>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Location</th>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
-                    <th className="px-8 py-6 text-xs font-bold text-gray-500 uppercase tracking-widest text-right">Actions</th>
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Identity</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Category</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Location Hub</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Capacity</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Operational Status</th>
+                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={6} className="px-8 py-32 text-center">
-                        <div className="flex flex-col items-center gap-4">
-                          <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                          <span className="text-sm font-medium text-gray-500 italic">Accessing central database...</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : resources.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-8 py-32 text-center">
-                        <div className="flex flex-col items-center gap-6">
-                          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center">
-                            <XCircle className="w-12 h-12 text-gray-300" />
-                          </div>
-                          <div className="space-y-1">
-                            <p className="text-xl font-bold text-gray-900">No resources found</p>
-                            <p className="text-sm text-gray-500">Try adjusting your filters or adding a new resource.</p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
+                    [...Array(5)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        {[...Array(6)].map((_, j) => (
+                          <td key={j} className="px-8 py-6"><div className="h-6 bg-slate-50 rounded-lg w-full"></div></td>
+                        ))}
+                      </tr>
+                    ))
+                  ) : resources.length > 0 ? (
                     resources.map((resource) => (
-                      <tr 
-                        key={resource.id} 
-                        className="group hover:bg-gray-50/70 transition-all border-b border-gray-100 last:border-0"
-                      >
+                      <tr key={resource.id} className="group hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
                         <td className="px-8 py-6">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors tracking-tight">{resource.name}</span>
-                            <span className="text-[10px] text-gray-400 font-mono mt-1 uppercase">ID: SC-{resource.id.toString().padStart(4, '0')}</span>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-50 group-hover:scale-110 transition-transform">
+                              {resource.type === 'Room' && <LayoutDashboard className="w-5 h-5 text-blue-600" />}
+                              {resource.type === 'Lab' && <Box className="w-5 h-5 text-indigo-600" />}
+                              {resource.type === 'Equipment' && <Monitor className="w-5 h-5 text-amber-600" />}
+                            </div>
+                            <div>
+                                <p className="font-black text-slate-900 tracking-tight">{resource.name}</p>
+                                <p className="text-[10px] font-bold text-slate-400 leading-none mt-1">ID: {String(resource.id).padStart(5, '0')}</p>
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="px-3 py-1.5 bg-gray-100 rounded-xl text-[10px] font-bold text-gray-600 uppercase tracking-wider">{resource.type}</span>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="text-sm font-bold text-gray-600 font-mono">{resource.capacity || 'N/A'}</span>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className="text-sm text-gray-600 font-medium">{resource.location}</span>
                         </td>
                         <td className="px-8 py-6">
                           <span className={cn(
-                            "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border",
-                            resource.status === 'Active' 
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-                              : "bg-red-50 text-red-700 border-red-100"
+                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                            resource.type === 'Room' ? "bg-blue-50 text-blue-700" : 
+                            resource.type === 'Lab' ? "bg-indigo-50 text-indigo-700" : 
+                            "bg-amber-50 text-amber-700"
                           )}>
-                            <div className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              resource.status === 'Active' ? "bg-emerald-500 animate-pulse" : "bg-red-500"
-                            )} />
-                            {resource.status}
+                            {resource.type}
                           </span>
                         </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <MapPin className="w-4 h-4 text-slate-300" />
+                            <span className="text-sm font-bold">{resource.location}</span>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center gap-2 text-slate-900 font-black text-sm">
+                            <Users className="w-4 h-4 text-slate-300" />
+                            {resource.capacity}
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className={cn(
+                            "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border",
+                            resource.status === 'Active' 
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
+                              : "bg-rose-50 text-rose-700 border-rose-100"
+                          )}>
+                            <div className={cn("w-2 h-2 rounded-full animate-pulse", resource.status === 'Active' ? "bg-emerald-500" : "bg-rose-500")} />
+                            {resource.status}
+                          </div>
+                        </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                          <div className="flex justify-end gap-2">
                             <button 
-                              onClick={() => navigate(`/admin/resources/edit/${resource.id}`)}
-                              className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-2xl transition-all hover:scale-110 active:scale-95"
-                              title="Edit Resource"
+                                onClick={() => navigate(`/admin/resources/edit/${resource.id}`)}
+                                className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100 hover:shadow-sm"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-5 h-5" />
                             </button>
                             <button 
-                              onClick={() => {
-                                setResourceToDelete(resource);
-                                setIsDeleteModalOpen(true);
-                              }}
-                              className="p-2.5 hover:bg-red-50 text-red-600 rounded-2xl transition-all hover:scale-110 active:scale-95"
-                              title="Delete Resource"
+                                onClick={() => setResourceToDelete(resource)}
+                                className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-100 hover:shadow-sm"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                         </td>
                       </tr>
                     ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="px-8 py-20 text-center">
+                        <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in">
+                          <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
+                            <Search className="w-10 h-10 text-slate-200" />
+                          </div>
+                          <p className="text-slate-400 font-bold">No infrastructure matching these parameters</p>
+                        </div>
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="px-8 py-6 bg-gray-50/50 border-t border-gray-200 flex items-center justify-between">
-              <span className="text-[11px] text-gray-500 font-bold uppercase tracking-widest">
-                Showing Page {page + 1} of {totalPages || 1}
-              </span>
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setPage(Math.max(0, page - 1))}
-                  disabled={page === 0 || loading}
-                  className="p-3 bg-white border border-gray-200 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md hover:border-blue-200 active:scale-90"
+            <div className="flex items-center justify-between px-4">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Page {page + 1} of {totalPages || 1}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  disabled={page === 0}
+                  onClick={() => setPage(p => p - 1)}
+                  className="p-3 rounded-2xl border border-slate-100 text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all font-black text-xs uppercase tracking-widest bg-white shadow-sm flex items-center gap-2 group"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                  Previous
                 </button>
-                <button 
-                  onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-                  disabled={page >= totalPages - 1 || loading}
-                  className="p-3 bg-white border border-gray-200 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm hover:shadow-md hover:border-blue-200 active:scale-90"
+                <button
+                  disabled={page === totalPages - 1}
+                  onClick={() => setPage(p => p + 1)}
+                  className="p-3 rounded-2xl border border-slate-100 text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all font-black text-xs uppercase tracking-widest bg-white shadow-sm flex items-center gap-2 group"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  Next
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>
@@ -388,57 +390,43 @@ const ResourceManagement = () => {
         </div>
       </main>
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white rounded-[48px] p-12 max-w-md w-full shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
-            <div className="w-24 h-24 bg-red-50 text-red-600 rounded-[32px] flex items-center justify-center mb-10 mx-auto shadow-inner">
-              <Trash2 className="w-10 h-10" />
+      {resourceToDelete && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setResourceToDelete(null)} />
+          <div className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-rose-500" />
+            <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mb-8">
+                <AlertTriangle className="w-10 h-10 text-rose-500" />
             </div>
-            <div className="text-center mb-12">
-              <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Are you sure?</h3>
-              <p className="text-gray-500 leading-relaxed font-medium">
-                You are about to permanently delete <span className="text-gray-900 font-bold underline decoration-red-200 underline-offset-4">"{resourceToDelete?.name}"</span>. 
-                This action is irreversible.
-              </p>
-            </div>
-
-            {success && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center gap-3 text-emerald-700 animate-in fade-in slide-in-from-top-4">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="font-bold text-sm">{success}</span>
-              </div>
-            )}
-
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-center gap-3 text-red-700 animate-in fade-in slide-in-from-top-4">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-bold text-sm">{error}</span>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-4">
-              <button 
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="w-full py-5 bg-red-600 text-white rounded-3xl text-sm font-black shadow-xl shadow-red-600/30 hover:bg-red-700 transition-all active:scale-95 flex items-center justify-center gap-3"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : 'Delete Destructively'}
-              </button>
-              <button 
-                onClick={() => setIsDeleteModalOpen(false)}
-                disabled={isDeleting}
-                className="w-full py-5 bg-gray-50 text-gray-500 rounded-3xl text-sm font-bold hover:bg-gray-100 transition-all active:scale-95"
-              >
-                Keep Resource
-              </button>
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-4">Purge Asset?</h3>
+            <p className="text-slate-500 font-medium mb-10 leading-relaxed">
+              Relocating asset <span className="font-black text-slate-900">#{resourceToDelete.name}</span> to archives. This operation cannot be reversed.
+            </p>
+            <div className="flex gap-4">
+                <button 
+                  onClick={() => setResourceToDelete(null)}
+                  className="flex-1 py-5 rounded-2xl text-slate-400 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 hover:text-slate-900 transition-all"
+                >
+                  Abort Action
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-rose-200 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isDeleting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Confirm Purge'}
+                </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="fixed bottom-12 right-12 z-[210] flex items-center gap-4 bg-emerald-900 text-white px-8 py-5 rounded-[2rem] shadow-2xl">
+          <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6 text-emerald-300" />
+          </div>
+          <span className="font-black uppercase tracking-widest text-[11px]">{success}</span>
         </div>
       )}
     </div>
