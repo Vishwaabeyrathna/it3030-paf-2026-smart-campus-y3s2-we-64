@@ -1,13 +1,16 @@
 package com.smartcampus.back_end.service;
 
-import com.smartcampus.back_end.dto.CreateTicketDTO;
-import com.smartcampus.back_end.dto.TicketResponseDTO;
+import com.smartcampus.back_end.dto.*;
 import com.smartcampus.back_end.model.IncidentTicket;
+import com.smartcampus.back_end.model.Role;
 import com.smartcampus.back_end.model.User;
 import com.smartcampus.back_end.repository.IncidentTicketRepository;
+import com.smartcampus.back_end.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class TicketService {
 
     private final IncidentTicketRepository ticketRepository;
+    private final UserRepository userRepository;
 
     public TicketResponseDTO createTicket(CreateTicketDTO dto, User user) throws IOException {
         IncidentTicket ticket = new IncidentTicket();
@@ -32,20 +36,17 @@ public class TicketService {
 
         if (dto.getImages() != null && !dto.getImages().isEmpty()) {
             List<String> base64Images = new ArrayList<>();
-            // Only process up to 3 images as per requirements
             int limit = Math.min(dto.getImages().size(), 3);
             for (int i = 0; i < limit; i++) {
                 MultipartFile image = dto.getImages().get(i);
                 if (image != null && !image.isEmpty()) {
-                    String base64Image = convertToBase64(image);
-                    base64Images.add("data:" + image.getContentType() + ";base64," + base64Image);
+                    base64Images.add("data:" + image.getContentType() + ";base64," + convertToBase64(image));
                 }
             }
             ticket.setImages(base64Images);
         }
 
-        IncidentTicket savedTicket = ticketRepository.save(ticket);
-        return mapToDTO(savedTicket);
+        return mapToDTO(ticketRepository.save(ticket));
     }
 
     public List<TicketResponseDTO> getAllTickets() {
@@ -60,12 +61,54 @@ public class TicketService {
                 .collect(Collectors.toList());
     }
 
-    private String convertToBase64(MultipartFile file) throws IOException {
-        byte[] bytes = file.getBytes();
-        return Base64.getEncoder().encodeToString(bytes);
+    public List<TicketResponseDTO> getAssignedTickets(User technician) {
+        return ticketRepository.findByAssignedTechnician(technician).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
-    private TicketResponseDTO mapToDTO(IncidentTicket ticket) {
+    public TicketResponseDTO getTicketById(Long id) {
+        return mapToDTO(ticketRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found")));
+    }
+
+    public TicketResponseDTO updateTicket(Long id, UpdateTicketDTO dto) {
+        IncidentTicket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        if (dto.getStatus() != null) {
+            ticket.setStatus(dto.getStatus());
+        }
+        if (dto.getResolutionNote() != null) {
+            ticket.setResolutionNote(dto.getResolutionNote());
+        }
+        if (dto.getRejectionReason() != null) {
+            ticket.setRejectionReason(dto.getRejectionReason());
+        }
+
+        return mapToDTO(ticketRepository.save(ticket));
+    }
+
+    public TicketResponseDTO assignTechnician(Long ticketId, Long technicianId) {
+        IncidentTicket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
+
+        User technician = userRepository.findById(technicianId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (technician.getRole() != Role.TECHNICIAN && technician.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not have a technician role");
+        }
+
+        ticket.setAssignedTechnician(technician);
+        if ("OPEN".equals(ticket.getStatus())) {
+            ticket.setStatus("IN_PROGRESS");
+        }
+
+        return mapToDTO(ticketRepository.save(ticket));
+    }
+
+    public TicketResponseDTO mapToDTO(IncidentTicket ticket) {
         return TicketResponseDTO.builder()
                 .id(ticket.getId())
                 .resourceLocation(ticket.getResourceLocation())
@@ -74,18 +117,19 @@ public class TicketService {
                 .priority(ticket.getPriority())
                 .preferredContactDetails(ticket.getPreferredContactDetails())
                 .images(ticket.getImages())
+                .creatorId(ticket.getCreator().getId())
                 .creatorName(ticket.getCreator().getName())
+                .assignedTechnicianId(ticket.getAssignedTechnician() != null ? ticket.getAssignedTechnician().getId() : null)
+                .assignedTechnicianName(ticket.getAssignedTechnician() != null ? ticket.getAssignedTechnician().getName() : null)
                 .status(ticket.getStatus())
+                .resolutionNote(ticket.getResolutionNote())
+                .rejectionReason(ticket.getRejectionReason())
                 .createdAt(ticket.getCreatedAt())
                 .updatedAt(ticket.getUpdatedAt())
                 .build();
     }
 
-    public TicketResponseDTO updateTicketStatus(Long id, String status) {
-        IncidentTicket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket not found with id: " + id));
-        ticket.setStatus(status);
-        IncidentTicket updatedTicket = ticketRepository.save(ticket);
-        return mapToDTO(updatedTicket);
+    private String convertToBase64(MultipartFile file) throws IOException {
+        return Base64.getEncoder().encodeToString(file.getBytes());
     }
 }
