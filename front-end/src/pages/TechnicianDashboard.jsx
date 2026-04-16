@@ -139,7 +139,7 @@ export default function TechnicianDashboard() {
               <p className="text-slate-400 text-xs font-bold mt-1">Welcome, {user?.name?.split(' ')[0]} — Your assigned work queue</p>
             </div>
             <div className="flex items-center gap-4">
-              <NotificationBell accentColor="orange" />
+              <NotificationBell />
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-orange-600 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-orange-600/20">
                 Technician
               </span>

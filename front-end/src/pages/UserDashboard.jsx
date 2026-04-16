@@ -259,7 +259,7 @@ export default function UserDashboard() {
                 <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.25em] mt-1.5">Campus Logistics • System v1.2</p>
               </div>
               <div className="flex items-center gap-4">
-                <NotificationBell accentColor="blue" />
+                <NotificationBell />
                 <div className="h-8 w-px bg-slate-200 mx-2"></div>
                 <span className="px-4 py-2 rounded-full bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.2em]">
                   User

@@ -202,7 +202,7 @@ export default function AdminDashboard() {
               <p className="text-slate-400 text-xs font-bold mt-1">Administrator Portal • Real-time Operations</p>
             </div>
             <div className="flex items-center gap-4">
-              <NotificationBell accentColor="purple" />
+              <NotificationBell />
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
                 Admin
               </span>

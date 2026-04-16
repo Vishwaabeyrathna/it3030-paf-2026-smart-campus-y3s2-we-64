@@ -113,7 +113,9 @@ public class TicketService {
             notificationService.notifyCreatorStatusChanged(ticket, "IN_PROGRESS");
         }
 
-        return mapToDTO(ticketRepository.save(ticket));
+        IncidentTicket saved = ticketRepository.save(ticket);
+        notificationService.notifyTechnicianAssigned(saved, technician);
+        return mapToDTO(saved);
     }
 
     public TicketResponseDTO mapToDTO(IncidentTicket ticket) {

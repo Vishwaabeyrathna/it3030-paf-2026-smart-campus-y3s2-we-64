@@ -22,6 +22,7 @@ public class TicketCommentService {
 
     private final TicketCommentRepository commentRepository;
     private final IncidentTicketRepository ticketRepository;
+    private final NotificationService notificationService;
 
     public List<TicketCommentDTO> getComments(Long ticketId) {
         return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
@@ -39,7 +40,9 @@ public class TicketCommentService {
         comment.setAuthor(author);
         comment.setContent(content);
 
-        return mapToDTO(commentRepository.save(comment));
+        TicketComment saved = commentRepository.save(comment);
+        notificationService.notifyCommentAdded(ticket, author);
+        return mapToDTO(saved);
     }
 
     public TicketCommentDTO updateComment(Long commentId, String newContent, User requester) {

@@ -52,6 +52,23 @@ public class NotificationController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOne(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String email) {
+        User user = getUser(email);
+        notificationService.deleteNotification(id, user);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAll(
+            @AuthenticationPrincipal String email) {
+        User user = getUser(email);
+        notificationService.deleteAllForUser(user);
+        return ResponseEntity.noContent().build();
+    }
+
     private User getUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));

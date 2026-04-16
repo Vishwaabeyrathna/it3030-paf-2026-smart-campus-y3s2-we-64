@@ -3,23 +3,30 @@ import notificationService from '../services/notificationService'
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000)
-  if (diff < 60) return 'Just now'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 60)    return 'Just now'
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
   return `${Math.floor(diff / 86400)}d ago`
 }
 
-export default function NotificationBell({ accentColor = 'purple' }) {
+const TYPE_ICON = {
+  TICKET_CREATED: '🎫',
+  STATUS_UPDATED: '🔄',
+  ASSIGNED:       '🔧',
+  COMMENT_ADDED:  '💬',
+}
+
+export default function NotificationBell() {
   const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [open, setOpen] = useState(false)
+  const [unreadCount, setUnreadCount]     = useState(0)
+  const [open, setOpen]                   = useState(false)
   const dropdownRef = useRef(null)
 
   const fetchNotifications = async () => {
     try {
       const data = await notificationService.getNotifications()
       setNotifications(data)
-      setUnreadCount(data.filter(n => !n.read).length)
+      setUnreadCount(data.filter(n => !n.isRead).length)
     } catch {
       // silently fail — user may not be logged in yet
     }
@@ -42,27 +49,44 @@ export default function NotificationBell({ accentColor = 'purple' }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const handleOpen = () => setOpen(prev => !prev)
-
   const handleMarkAllRead = async () => {
     await notificationService.markAllAsRead()
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
     setUnreadCount(0)
   }
 
   const handleMarkOne = async (id) => {
     await notificationService.markAsRead(id)
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
     setUnreadCount(prev => Math.max(0, prev - 1))
   }
 
-  const typeIcon = (type) => type === 'TICKET_CREATED' ? '🎫' : '🔄'
+  const handleDeleteOne = async (e, id, wasUnread) => {
+    e.stopPropagation()
+    try {
+      await notificationService.deleteNotification(id)
+      setNotifications(prev => prev.filter(n => n.id !== id))
+      if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleClearAll = async () => {
+    try {
+      await notificationService.deleteAll()
+      setNotifications([])
+      setUnreadCount(0)
+    } catch {
+      // ignore
+    }
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Bell button */}
       <button
-        onClick={handleOpen}
+        onClick={() => setOpen(prev => !prev)}
         className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors"
         aria-label="Notifications"
       >
@@ -80,6 +104,7 @@ export default function NotificationBell({ accentColor = 'purple' }) {
       {/* Dropdown */}
       {open && (
         <div className="absolute right-0 top-10 w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden">
+
           {/* Header */}
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <div>
@@ -88,14 +113,24 @@ export default function NotificationBell({ accentColor = 'purple' }) {
                 <p className="text-[11px] text-slate-400">{unreadCount} unread</p>
               )}
             </div>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="text-[11px] font-semibold text-red-400 hover:text-red-600 transition-colors"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           {/* List */}
@@ -109,23 +144,37 @@ export default function NotificationBell({ accentColor = 'purple' }) {
               notifications.map(n => (
                 <div
                   key={n.id}
-                  onClick={() => !n.read && handleMarkOne(n.id)}
-                  className={`px-4 py-3 flex gap-3 cursor-pointer hover:bg-slate-50 transition-colors ${!n.read ? 'bg-blue-50/40' : ''}`}
+                  onClick={() => !n.isRead && handleMarkOne(n.id)}
+                  className={`px-4 py-3 flex gap-3 cursor-pointer hover:bg-slate-50 transition-colors group ${!n.isRead ? 'bg-blue-50/40' : ''}`}
                 >
-                  <span className="text-lg shrink-0 mt-0.5">{typeIcon(n.type)}</span>
+                  <span className="text-lg shrink-0 mt-0.5">
+                    {TYPE_ICON[n.type] ?? '🔔'}
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs leading-snug ${!n.read ? 'text-slate-800 font-semibold' : 'text-slate-500'}`}>
+                    <p className={`text-xs leading-snug ${!n.isRead ? 'text-slate-800 font-semibold' : 'text-slate-500'}`}>
                       {n.message}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">{timeAgo(n.createdAt)}</p>
                   </div>
-                  {!n.read && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5"></span>
-                  )}
+                  <div className="flex items-start gap-1.5 shrink-0 mt-0.5">
+                    {!n.isRead && (
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-1"></span>
+                    )}
+                    <button
+                      onClick={(e) => handleDeleteOne(e, n.id, !n.isRead)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 flex items-center justify-center rounded text-slate-300 hover:text-red-500 hover:bg-red-50"
+                      title="Dismiss"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))
             )}
           </div>
+
         </div>
       )}
     </div>

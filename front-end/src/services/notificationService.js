@@ -23,7 +23,15 @@ const notificationService = {
 
   markAllAsRead: async () => {
     await axios.patch(`${API_URL}/read-all`, {}, { headers: authHeaders() });
-  }
+  },
+
+  deleteNotification: async (id) => {
+    await axios.delete(`${API_URL}/${id}`, { headers: authHeaders() });
+  },
+
+  deleteAll: async () => {
+    await axios.delete(API_URL, { headers: authHeaders() });
+  },
 };
 
 export default notificationService;
