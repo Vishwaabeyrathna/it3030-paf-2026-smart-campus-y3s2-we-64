@@ -1,20 +1,56 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { 
-  Search, Filter, MapPin, Users, Box, Monitor, LayoutDashboard, 
-  Sparkles, Zap, ArrowRight, ShieldCheck, Clock, Calendar, 
-  ChevronRight, Info, Star, Bookmark, ExternalLink
-} from 'lucide-react';
+import { Search, MapPin, Users, Layout, Home, ChevronRight, Info, Calendar, Sparkles, Zap, LogOut, ChevronLeft, Settings, Bell, Box, Monitor, LayoutDashboard, School, Ticket, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-const cn = (...inputs) => inputs.filter(Boolean).join(' ');
+function cn(...inputs) { return twMerge(clsx(inputs)); }
+
+const ResourceCard = ({ resource, onDetails }) => {
+  const isAvailable = resource.status === 'Active';
+  const getTypeStyles = (type) => {
+    switch(type) {
+      case 'Room': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+      case 'Lab': return 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+      case 'Equipment': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+      default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+    }
+  };
+  const getIcon = (type) => {
+    switch(type) {
+      case 'Room': return <Layout className='w-4 h-4' />;
+      case 'Lab': return <Box className='w-4 h-4' />;
+      case 'Equipment': return <Monitor className='w-4 h-4' />;
+      default: return <Info className='w-4 h-4' />;
+    }
+  };
+  return (
+    <div className='group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full overflow-hidden'>
+      <div className='relative h-40 overflow-hidden bg-slate-100'>
+        {resource.imageUrl ? <img src={resource.imageUrl} alt={resource.name} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500' /> : <div className='w-full h-full flex items-center justify-center bg-slate-50'><div className='opacity-20 group-hover:scale-110 transition-transform'>{getIcon(resource.type)}</div></div>}
+        <div className='absolute top-3 left-3 right-3 flex justify-between'>
+          <div className={cn('px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md', getTypeStyles(resource.type))}><div className='flex items-center gap-1.5'>{getIcon(resource.type)}{resource.type}</div></div>
+          <div className={cn('px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border', isAvailable ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20')}>{isAvailable ? 'Available' : 'Booked'}</div>
+        </div>
+      </div>
+      <div className='p-5 flex-1 flex flex-col'>
+        <div className='mb-3'><h3 className='text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1'>{resource.name}</h3><div className='flex items-center gap-1.5 text-slate-500 text-xs'><MapPin className='w-3.5 h-3.5' /><span className='truncate'>{resource.location}</span></div></div>
+        <div className='grid grid-cols-2 gap-3 mb-5'><div className='bg-slate-50 rounded-xl p-2.5 border border-slate-100'><p className='text-[10px] text-slate-400 font-bold uppercase'>Capacity</p><p className='text-sm font-bold text-slate-700'>{resource.capacity}</p></div><div className='bg-slate-50 rounded-xl p-2.5 border border-slate-100'><p className='text-[10px] text-slate-400 font-bold uppercase'>Status</p><p className='text-sm font-bold text-slate-700'>Pristine</p></div></div>
+        <div className='mt-auto flex items-center gap-2'><button onClick={() => onDetails(resource.id)} className='flex-1 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-all'>Details</button><button disabled={!isAvailable} className={cn('p-2.5 rounded-xl transition-all', isAvailable ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}><Calendar className='w-4 h-4' /></button></div>
+      </div>
+    </div>
+  );
+};
 
 const UserResourcePage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({ type: '', status: 'Active' });
+  const [filterType, setFilterType] = useState('All');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -22,165 +58,42 @@ const UserResourcePage = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const params = {
-        page,
-        size: 9,
-        search: search || undefined,
-        type: filters.type || undefined,
-        status: 'Active',
-      };
-      
-      const response = await axios.get('http://localhost:8080/api/resources', { 
-        params,
-        headers: { 'Authorization': `Bearer ${token}` },
-        withCredentials: true 
-      });
+      const params = { page, size: 8, search: search || undefined, type: filterType !== 'All' ? filterType : undefined };
+      const response = await axios.get('http://localhost:8080/api/user/resources', { params, headers: { Authorization: 'Bearer ' + token }, withCredentials: true });
       setResources(response.data.content);
       setTotalPages(response.data.totalPages);
-    } catch (error) {
-      console.error('Error fetching resources:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, filters]);
+    } catch (error) { console.error('Error fetching resources:', error); } finally { setLoading(false); }
+  }, [page, search, filterType]);
 
-  useEffect(() => {
-    fetchResources();
-  }, [fetchResources]);
+  useEffect(() => { fetchResources(); }, [fetchResources]);
 
-  const categories = [
-    { name: 'All', icon: Zap },
-    { name: 'Room', icon: LayoutDashboard },
-    { name: 'Lab', icon: Box },
-    { name: 'Equipment', icon: Monitor },
+  const navItems = [
+    { icon: LayoutDashboard, label: 'My Dashboard', id: 'dashboard', path: '/dashboard/user' },
+    { icon: School, label: 'Available Resources', id: 'resources', path: '/resources', active: true },
+    { icon: Calendar, label: 'My Requests', id: 'requests', path: '/my-requests' },
+    { icon: Bell, label: 'Notifications', id: 'notifications', path: '/notifications' },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <section className="relative h-[450px] bg-slate-900 overflow-hidden flex items-center px-12 lg:px-24">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full" />
-          <div className="absolute bottom-[-20%] left-[-5%] w-[400px] h-[400px] bg-indigo-600/10 blur-[100px] rounded-full" />
+    <div className='flex h-screen bg-[#f8fafc]'>
+      <aside className='bg-[#0a1128] w-72 h-full flex flex-col z-50'>
+        <div className='p-8 mb-4'><div className='flex items-center gap-4'><div className='w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20'><School className='w-6 h-6 text-white' /></div><div className='flex flex-col'><span className='text-white font-black text-lg tracking-tight'>Smart Campus</span><span className='text-blue-400 text-[10px] font-bold uppercase tracking-widest'>Student Ops</span></div></div></div>
+        <div className='px-4 mb-4'><p className='text-[10px] font-black text-slate-500 uppercase tracking-widest px-4 mb-4'>Main Menu</p><nav className='space-y-2'>{navItems.map((item) => (<button key={item.id} onClick={() => navigate(item.path)} className={cn('w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-200 group', item.active ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'text-slate-400 hover:bg-white/5 hover:text-white')}><item.icon className={cn('w-5 h-5 flex-shrink-0 transition-transform duration-300', item.active ? 'scale-110' : 'group-hover:scale-110')} /><span className='font-bold text-sm'>{item.label}</span></button>))}</nav></div>
+        <div className='mt-auto p-4 border-t border-white/5'><div className='flex items-center gap-4 p-4 rounded-2xl bg-white/5 mb-4'><div className='w-10 h-10 rounded-xl bg-slate-800 flex-shrink-0 border border-white/10 overflow-hidden'><img src={'https://ui-avatars.com/api/?name=' + encodeURIComponent(user?.name || '') + '&background=1e293b&color=cbd5e1&bold=true'} alt='Avatar' /></div><div className='min-w-0'><p className='text-xs font-black text-white truncate'>{user?.name || 'Student'}</p><p className='text-[10px] font-bold text-slate-500 uppercase'>USER</p></div></div><button onClick={logout} className='w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all'><LogOut className='w-5 h-5' /><span className='font-bold text-sm'>Sign Out</span></button></div>
+      </aside>
+      <main className='flex-1 flex flex-col min-w-0 overflow-hidden bg-white shadow-2xl rounded-l-[3rem] -ml-6 relative z-10'>
+        <header className='h-24 px-12 flex items-center justify-between border-b border-slate-100 bg-white/50 backdrop-blur-md sticky top-0 z-20'>
+          <div><h1 className='text-2xl font-black text-slate-900 tracking-tight'>Available Resources</h1><p className='text-xs font-bold text-slate-400 uppercase tracking-widest'>Discover and Reserve Assets</p></div>
+          <div className='flex items-center gap-6'><div className='flex items-center gap-2 p-1 bg-slate-100 rounded-xl'>{['All', 'Room', 'Lab', 'Equipment'].map((t) => (<button key={t} onClick={() => { setFilterType(t); setPage(0); }} className={cn('px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', filterType === t ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600')}>{t}</button>))}</div><div className='relative flex items-center group'><Search className='absolute left-4 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors' /><input type='text' placeholder='Quick search...' value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} className='pl-12 pr-6 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:bg-white focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 outline-none transition-all text-xs font-bold w-64' /></div></div>
+        </header>
+        <div className='flex-1 overflow-auto p-12'>
+          {loading ? (<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>{[...Array(8)].map((_, i) => (<div key={i} className='h-80 bg-slate-50 rounded-2xl animate-pulse border border-slate-100' />))}</div>) : (
+            <>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12'>{resources.length > 0 ? (resources.map((resource) => (<ResourceCard key={resource.id} resource={resource} onDetails={(id) => navigate('/resources/' + id)} />))) : (<div className='col-span-full py-32 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200'><div className='w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm'><Search className='w-8 h-8 text-slate-200' /></div><h3 className='text-xl font-black text-slate-900 mb-2'>No Matching Assets</h3><p className='text-slate-400 text-sm font-medium'>Try adjusting your search or filters to find what you need.</p></div>)}</div>
+              {totalPages > 1 && (<div className='flex justify-center items-center gap-3'><button disabled={page === 0} onClick={() => setPage(p => p - 1)} className='p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all'><ChevronLeft className='w-5 h-5' /></button><div className='flex items-center gap-1.5'>{[...Array(totalPages)].map((_, i) => (<button key={i} onClick={() => { setPage(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={cn('w-10 h-10 rounded-xl font-bold text-xs transition-all', page === i ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-slate-400 hover:bg-slate-50')}>{i + 1}</button>))}</div><button disabled={page === totalPages - 1} onClick={() => setPage(p => p + 1)} className='p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all'><ChevronRight className='w-5 h-5' /></button></div>)}
+            </>
+          )}
         </div>
-
-        <div className="relative z-10 max-w-4xl">
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/10 rounded-full border border-white/10 mb-8">
-            <Sparkles className="w-5 h-5 text-blue-400" />
-            <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Campus Infrastructure Alpha</span>
-          </div>
-          <h1 className="text-6xl lg:text-8xl font-black text-white leading-none tracking-tight mb-8">
-            The New <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Campus</span> <br/>
-            Ecosystem
-          </h1>
-          <p className="text-slate-400 text-lg lg:text-xl max-w-2xl font-medium leading-relaxed mb-10">
-            Discover and reserve premium academic assets. From cutting-edge labs to collaborative spaces, access everything you need to excel.
-          </p>
-          <div className="flex flex-wrap gap-4 items-center">
-            <button className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center gap-3 active:scale-95">
-              Explore Now <ArrowRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-12 -mt-16 relative z-30">
-        <div className="bg-white rounded-[2.5rem] shadow-2xl p-6 lg:p-10 border border-slate-100 flex flex-col lg:flex-row gap-8 items-center justify-between">
-          <div className="relative flex-1 w-full group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors w-6 h-6" />
-            <input
-              type="text"
-              placeholder="Search assets by name or dynamic location..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-              className="w-full pl-16 pr-8 py-5 bg-slate-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-600/5 transition-all text-sm font-bold placeholder:text-slate-300"
-            />
-          </div>
-          
-          <div className="flex items-center gap-4 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
-            {categories.map((cat) => (
-              <button
-                key={cat.name}
-                onClick={() => { setFilters(f => ({ ...f, type: cat.name === 'All' ? '' : cat.name })); setPage(0); }}
-                className={cn(
-                  "px-8 py-5 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3 transition-all shrink-0",
-                  (filters.type === cat.name || (cat.name === 'All' && !filters.type))
-                    ? "bg-slate-900 text-white shadow-xl -translate-y-1"
-                    : "bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 border border-slate-50"
-                )}
-              >
-                <cat.icon className="w-5 h-5" />
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-[1600px] mx-auto px-6 lg:px-12 py-20">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-[3rem] h-[500px] animate-pulse p-8 border border-slate-100">
-                <div className="h-[250px] bg-slate-50 rounded-[2rem] mb-6" />
-                <div className="space-y-4">
-                  <div className="h-8 bg-slate-50 rounded-xl w-3/4" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : resources.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-            {resources.map((resource) => (
-              <div key={resource.id} className="group bg-white rounded-[3rem] p-8 border border-white hover:border-blue-100 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col h-full hover:-translate-y-2">
-                <div className="relative mb-8 rounded-[2rem] overflow-hidden aspect-[4/3] bg-slate-50">
-                   {resource.imageUrl ? (
-                     <img src={resource.imageUrl} alt={resource.name} className="w-full h-full object-cover" />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50/30">
-                        <Box className="w-20 h-20 text-blue-100" />
-                     </div>
-                   )}
-                   <div className="absolute top-6 left-6 px-4 py-2 bg-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-                      {resource.type}
-                   </div>
-                </div>
-
-                <div className="flex-1 space-y-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
-                        {resource.name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <MapPin className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">{resource.location}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-3">
-                    {resource.description || "Premium campus infrastructure optimized for student success."}
-                  </p>
-                </div>
-
-                <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                     <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                     <span className="text-[10px] font-black uppercase text-emerald-600 tracking-widest">Available</span>
-                  </div>
-                  <button className="h-14 px-8 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-blue-200 flex items-center gap-3">
-                    Reserve <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-40">
-            <Search className="w-12 h-12 text-slate-300 mb-10" />
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight mb-4">No assets detected</h3>
-          </div>
-        )}
       </main>
     </div>
   );
