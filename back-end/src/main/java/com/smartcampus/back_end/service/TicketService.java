@@ -24,6 +24,7 @@ public class TicketService {
 
     private final IncidentTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public TicketResponseDTO createTicket(CreateTicketDTO dto, User user) throws IOException {
         IncidentTicket ticket = new IncidentTicket();
@@ -46,7 +47,9 @@ public class TicketService {
             ticket.setImages(base64Images);
         }
 
-        return mapToDTO(ticketRepository.save(ticket));
+        IncidentTicket savedTicket = ticketRepository.save(ticket);
+        notificationService.notifyAdminsNewTicket(savedTicket);
+        return mapToDTO(savedTicket);
     }
 
     public List<TicketResponseDTO> getAllTickets() {
@@ -77,7 +80,11 @@ public class TicketService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
 
         if (dto.getStatus() != null) {
+            String oldStatus = ticket.getStatus();
             ticket.setStatus(dto.getStatus());
+            if (!dto.getStatus().equals(oldStatus)) {
+                notificationService.notifyCreatorStatusChanged(ticket, dto.getStatus());
+            }
         }
         if (dto.getResolutionNote() != null) {
             ticket.setResolutionNote(dto.getResolutionNote());
@@ -103,6 +110,7 @@ public class TicketService {
         ticket.setAssignedTechnician(technician);
         if ("OPEN".equals(ticket.getStatus())) {
             ticket.setStatus("IN_PROGRESS");
+            notificationService.notifyCreatorStatusChanged(ticket, "IN_PROGRESS");
         }
 
         return mapToDTO(ticketRepository.save(ticket));

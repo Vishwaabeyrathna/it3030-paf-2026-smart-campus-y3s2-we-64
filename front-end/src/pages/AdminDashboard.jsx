@@ -3,6 +3,7 @@ import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import UserManagement from '../components/UserManagement'
 import TicketDetailModal from '../components/TicketDetailModal'
+import NotificationBell from '../components/NotificationBell'
 import ticketService from '../services/ticketService'
 
 const STATUS_STYLES = {
@@ -194,9 +195,12 @@ export default function AdminDashboard() {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight capitalize">{activeTab}</h1>
               <p className="text-slate-400 text-xs font-bold mt-1">Administrator Portal • Real-time Operations</p>
             </div>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
-              Admin
-            </span>
+            <div className="flex items-center gap-4">
+              <NotificationBell accentColor="purple" />
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
+                Admin
+              </span>
+            </div>
           </header>
 
           <div className="px-10 py-10 space-y-10">

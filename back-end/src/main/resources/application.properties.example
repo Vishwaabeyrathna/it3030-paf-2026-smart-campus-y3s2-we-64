@@ -1,0 +1,28 @@
+spring.application.name=back-end
+
+# ── Database ──────────────────────────────────────────────────────────────────
+spring.datasource.url=jdbc:mysql://localhost:3306/smart_campus?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+spring.datasource.username=YOUR_DB_USERNAME
+spring.datasource.password=YOUR_DB_PASSWORD
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# ── Server ────────────────────────────────────────────────────────────────────
+server.port=8080
+
+# ── Google OAuth2 ─────────────────────────────────────────────────────────────
+spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
+spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
+spring.security.oauth2.client.registration.google.scope=email,profile
+
+# ── Super Admin Seed ──────────────────────────────────────────────────────────
+app.admin.email=YOUR_ADMIN_EMAIL
+app.admin.name=Super Admin
+
+# ── JWT ───────────────────────────────────────────────────────────────────────
+# Generate a secure random hex string (min 64 chars)
+app.jwt.secret=YOUR_JWT_SECRET_HEX_64_CHARS
+app.jwt.expiration-ms=86400000

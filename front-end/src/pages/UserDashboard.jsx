@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import ticketService from '../services/ticketService'
 import TicketDetailModal from '../components/TicketDetailModal'
+import NotificationBell from '../components/NotificationBell'
 
 const STATUS_STYLES = {
   OPEN:        'bg-amber-100 text-amber-700',
@@ -113,9 +114,12 @@ export default function UserDashboard() {
               <h1 className="text-2xl font-black text-slate-900">My Dashboard</h1>
               <p className="text-slate-400 text-xs font-bold mt-1">Welcome back, {user?.name?.split(' ')[0]}</p>
             </div>
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-blue-600/20">
-              User
-            </span>
+            <div className="flex items-center gap-4">
+              <NotificationBell accentColor="blue" />
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-blue-600/20">
+                User
+              </span>
+            </div>
           </header>
 
           <div className="px-10 py-10 space-y-8">
