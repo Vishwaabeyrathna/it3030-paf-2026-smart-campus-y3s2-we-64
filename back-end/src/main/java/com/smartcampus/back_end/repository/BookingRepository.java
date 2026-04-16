@@ -43,4 +43,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("date") LocalDate date,
             @Param("resourceId") Long resourceId
     );
+
+    long countByStatus(BookingStatus status);
+
+    @Query("select b.resource.name, count(b) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED group by b.resource.name order by count(b) desc")
+    List<Object[]> findResourceBookingCounts();
+
+    @Query("select HOUR(b.startTime), count(b) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED group by HOUR(b.startTime) order by count(b) desc")
+    List<Object[]> findBookingCountsByHour();
+
+    @Query("select count(distinct b.resource.id) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED")
+    long countDistinctResourceId();
 }
