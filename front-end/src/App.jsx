@@ -4,6 +4,7 @@ import OAuth2CallbackPage from './pages/OAuth2CallbackPage'
 import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AddResourcePage from './pages/AddResourcePage'
+import EditResourcePage from './pages/EditResourcePage'
 import TechnicianDashboard from './pages/TechnicianDashboard'
 import UserResourcePage from './pages/UserResourcePage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -47,6 +48,14 @@ function App() {
         element={
           <ProtectedRoute roles={['ADMIN']}>
             <AddResourcePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/resources/edit/:id"
+        element={
+          <ProtectedRoute roles={['ADMIN']}>
+            <EditResourcePage />
           </ProtectedRoute>
         }
       />

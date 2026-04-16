@@ -329,6 +329,7 @@ const ResourceManagement = () => {
                         <td className="px-8 py-6 text-right">
                           <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                             <button 
+                              onClick={() => navigate(`/admin/resources/edit/${resource.id}`)}
                               className="p-2.5 hover:bg-blue-50 text-blue-600 rounded-2xl transition-all hover:scale-110 active:scale-95"
                               title="Edit Resource"
                             >
