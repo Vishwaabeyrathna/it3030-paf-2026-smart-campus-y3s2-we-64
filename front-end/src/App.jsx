@@ -4,6 +4,7 @@ import OAuth2CallbackPage from './pages/OAuth2CallbackPage'
 import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import TechnicianDashboard from './pages/TechnicianDashboard'
+import NewIncidentPage from './pages/NewIncidentPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
 
@@ -21,6 +22,14 @@ function App() {
         element={
           <ProtectedRoute roles={['USER']}>
             <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/user/report-incident"
+        element={
+          <ProtectedRoute roles={['USER']}>
+            <NewIncidentPage />
           </ProtectedRoute>
         }
       />

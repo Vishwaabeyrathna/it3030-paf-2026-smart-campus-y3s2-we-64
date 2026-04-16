@@ -2,7 +2,7 @@ spring.application.name=back-end
 
 # ── Database ──────────────────────────────────────────────────────────────────
 spring.datasource.url=jdbc:mysql://localhost:3306/smart_campus?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-spring.datasource.username=root
+spring.datasource.username=YOUR_DB_USERNAME
 spring.datasource.password=YOUR_DB_PASSWORD
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
@@ -14,17 +14,15 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 server.port=8080
 
 # ── Google OAuth2 ─────────────────────────────────────────────────────────────
-# Get credentials from https://console.cloud.google.com -> APIs & Services -> Credentials
 spring.security.oauth2.client.registration.google.client-id=YOUR_GOOGLE_CLIENT_ID
 spring.security.oauth2.client.registration.google.client-secret=YOUR_GOOGLE_CLIENT_SECRET
 spring.security.oauth2.client.registration.google.scope=email,profile
 
 # ── Super Admin Seed ──────────────────────────────────────────────────────────
-# Set to your own Google account email. On first boot this account is created/promoted to ADMIN.
-app.admin.email=your-google-email@gmail.com
+app.admin.email=YOUR_ADMIN_EMAIL
 app.admin.name=Super Admin
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
-# Generate a strong secret: openssl rand -hex 32
-app.jwt.secret=YOUR_JWT_SECRET
+# Generate a secure random hex string (min 64 chars)
+app.jwt.secret=YOUR_JWT_SECRET_HEX_64_CHARS
 app.jwt.expiration-ms=86400000
