@@ -15,8 +15,13 @@ public class TicketResponseDTO {
     private String priority;
     private String preferredContactDetails;
     private List<String> images;
+    private Long creatorId;
     private String creatorName;
+    private Long assignedTechnicianId;
+    private String assignedTechnicianName;
     private String status;
+    private String resolutionNote;
+    private String rejectionReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
