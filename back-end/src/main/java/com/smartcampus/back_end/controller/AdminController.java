@@ -3,6 +3,7 @@ package com.smartcampus.back_end.controller;
 import com.smartcampus.back_end.model.Role;
 import com.smartcampus.back_end.model.User;
 import com.smartcampus.back_end.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +33,43 @@ public class AdminController {
     }
 
     private static final String UPLOAD_DIR = "uploads/avatars/";
+    private static final long MAX_PHOTO_BYTES = 5 * 1024 * 1024L;
+    private static final List<String> ALLOWED_TYPES = List.of(
+            "image/jpeg", "image/png", "image/gif", "image/webp"
+    );
+
+    private ResponseEntity<Map<String, Object>> badRequest(String message) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("message", message));
+    }
+
+    private ResponseEntity<Map<String, Object>> validatePhoto(MultipartFile photo) {
+        if (photo == null || photo.isEmpty()) return null;
+        if (!ALLOWED_TYPES.contains(photo.getContentType()))
+            return badRequest("Invalid file type. Only JPG, PNG, GIF, or WebP images are allowed.");
+        if (photo.getSize() > MAX_PHOTO_BYTES)
+            return badRequest(String.format(
+                    "Photo is too large (%.1f MB). Maximum allowed size is 5 MB.",
+                    photo.getSize() / 1024.0 / 1024.0));
+        return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> validateFields(String name, String phone, String address) {
+        if (name != null && !name.isBlank()) {
+            String n = name.trim();
+            if (n.length() < 2)  return badRequest("Name must be at least 2 characters.");
+            if (n.length() > 80) return badRequest("Name cannot exceed 80 characters.");
+            if (n.matches("\\d+")) return badRequest("Name cannot be numbers only.");
+        }
+        if (phone != null && !phone.isBlank()) {
+            String clean = phone.trim().replaceAll("[\\s\\-(). ]", "");
+            if (!clean.matches("^\\+?\\d{7,15}$"))
+                return badRequest("Enter a valid phone number (7–15 digits, optional + prefix).");
+        }
+        if (address != null && address.trim().length() > 200)
+            return badRequest("Address cannot exceed 200 characters.");
+        return null;
+    }
 
     private Map<String, Object> toUserMap(User u) {
         Map<String, Object> m = new HashMap<>();
@@ -62,14 +100,20 @@ public class AdminController {
             @RequestParam(required = false, defaultValue = "false") boolean removePhoto
     ) throws IOException {
 
+        ResponseEntity<Map<String, Object>> fieldError = validateFields(name, phone, address);
+        if (fieldError != null) return fieldError;
+
+        ResponseEntity<Map<String, Object>> photoError = validatePhoto(photo);
+        if (photoError != null) return photoError;
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
 
         if (name != null && !name.isBlank()) {
             user.setName(name.trim());
         }
-        user.setPhone(phone != null ? phone.trim() : null);
-        user.setAddress(address != null ? address.trim() : null);
+        user.setPhone((phone != null && !phone.isBlank()) ? phone.trim() : null);
+        user.setAddress((address != null && !address.isBlank()) ? address.trim() : null);
 
         if (removePhoto) {
             deleteOldAvatar(user.getPicture());
