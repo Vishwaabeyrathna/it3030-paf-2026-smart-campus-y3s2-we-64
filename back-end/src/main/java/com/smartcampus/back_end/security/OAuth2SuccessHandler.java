@@ -14,7 +14,7 @@ import java.io.IOException;
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private static final String FRONTEND_REDIRECT = "http://localhost:5173/oauth2/callback";
+    private static final String FRONTEND_REDIRECT = "http://localhost:5174/oauth2/callback";
 
     private final UserRepository userRepository;
     private final JwtUtils jwtUtils;
