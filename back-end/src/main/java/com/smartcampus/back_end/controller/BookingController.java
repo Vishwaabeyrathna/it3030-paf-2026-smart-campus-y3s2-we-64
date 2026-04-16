@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.controller;
 
+import com.smartcampus.back_end.dto.BookingAnalyticsDTO;
 import com.smartcampus.back_end.dto.BookingRequestDTO;
 import com.smartcampus.back_end.dto.BookingResponseDTO;
 import com.smartcampus.back_end.dto.BookingStatusUpdateDTO;
@@ -59,6 +60,12 @@ public class BookingController {
             @RequestParam(required = false) Long resourceId) {
 
         return ResponseEntity.ok(bookingService.getAllBookings(status, date, resourceId));
+    }
+
+    @GetMapping("/analytics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BookingAnalyticsDTO> getAnalytics() {
+        return ResponseEntity.ok(bookingService.getBookingAnalytics());
     }
 
     @GetMapping("/{id}")
