@@ -8,6 +8,11 @@ back-end/*.jar
 back-end/*.war
 
 # ========================
+# Uploaded user files
+# ========================
+back-end/uploads/
+
+# ========================
 # Node / React (Vite)
 # ========================
 front-end/node_modules/

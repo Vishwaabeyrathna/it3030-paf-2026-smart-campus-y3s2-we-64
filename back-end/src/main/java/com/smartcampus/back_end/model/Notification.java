@@ -24,7 +24,9 @@ public class Notification {
     private String message;
 
     @Column(nullable = false)
-    private String type; // TICKET_CREATED, STATUS_UPDATED
+    private String type; // TICKET_CREATED, STATUS_UPDATED, ASSIGNED, COMMENT_ADDED
+
+    private Long ticketId; // reference to related ticket for deep-linking
 
     @Column(nullable = false)
     private boolean isRead = false;
@@ -37,9 +39,10 @@ public class Notification {
         createdAt = LocalDateTime.now();
     }
 
-    public Notification(User user, String message, String type) {
+    public Notification(User user, String message, String type, Long ticketId) {
         this.user = user;
         this.message = message;
         this.type = type;
+        this.ticketId = ticketId;
     }
 }

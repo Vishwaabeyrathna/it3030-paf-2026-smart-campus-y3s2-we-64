@@ -5,6 +5,7 @@ import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import TechnicianDashboard from './pages/TechnicianDashboard'
 import NewIncidentPage from './pages/NewIncidentPage'
+import EditProfilePage from './pages/EditProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
 
@@ -46,6 +47,15 @@ function App() {
         element={
           <ProtectedRoute roles={['TECHNICIAN']}>
             <TechnicianDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
+            <EditProfilePage />
           </ProtectedRoute>
         }
       />

@@ -9,6 +9,7 @@ import com.smartcampus.back_end.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -96,6 +97,7 @@ public class TicketService {
         return mapToDTO(ticketRepository.save(ticket));
     }
 
+    @Transactional
     public TicketResponseDTO assignTechnician(Long ticketId, Long technicianId) {
         IncidentTicket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
@@ -113,7 +115,9 @@ public class TicketService {
             notificationService.notifyCreatorStatusChanged(ticket, "IN_PROGRESS");
         }
 
-        return mapToDTO(ticketRepository.save(ticket));
+        IncidentTicket saved = ticketRepository.save(ticket);
+        notificationService.notifyTechnicianAssigned(saved, technician);
+        return mapToDTO(saved);
     }
 
     public TicketResponseDTO mapToDTO(IncidentTicket ticket) {

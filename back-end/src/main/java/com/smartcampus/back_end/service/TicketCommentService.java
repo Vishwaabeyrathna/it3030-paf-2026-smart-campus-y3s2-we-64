@@ -11,6 +11,7 @@ import com.smartcampus.back_end.repository.TicketCommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class TicketCommentService {
 
     private final TicketCommentRepository commentRepository;
     private final IncidentTicketRepository ticketRepository;
+    private final NotificationService notificationService;
 
     public List<TicketCommentDTO> getComments(Long ticketId) {
         return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
@@ -30,6 +32,7 @@ public class TicketCommentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public TicketCommentDTO addComment(Long ticketId, String content, User author) {
         IncidentTicket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket not found"));
@@ -39,7 +42,9 @@ public class TicketCommentService {
         comment.setAuthor(author);
         comment.setContent(content);
 
-        return mapToDTO(commentRepository.save(comment));
+        TicketComment saved = commentRepository.save(comment);
+        notificationService.notifyCommentAdded(ticket, author);
+        return mapToDTO(saved);
     }
 
     public TicketCommentDTO updateComment(Long commentId, String newContent, User requester) {
