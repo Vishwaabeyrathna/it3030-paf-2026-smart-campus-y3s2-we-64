@@ -5,7 +5,7 @@ import {
   Plus, Search, Filter, MoreHorizontal, Edit2, Trash2, 
   ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2,
   LayoutDashboard, School, Calendar, Ticket, LogOut, Menu, X,
-  Building2, Activity, AlertTriangle
+  Building2, Activity, AlertTriangle, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -45,6 +45,8 @@ const ResourceManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [resourceToDelete, setResourceToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null);
 
   const fetchSummary = async () => {
     setSummaryLoading(true);
@@ -100,6 +102,7 @@ const ResourceManagement = () => {
   const handleDelete = async () => {
     if (!resourceToDelete) return;
     setIsDeleting(true);
+    setError(null);
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:8080/api/resources/${resourceToDelete.id}`, { 
@@ -108,11 +111,16 @@ const ResourceManagement = () => {
         },
         withCredentials: true 
       });
+      setSuccess('Resource deleted successfully');
       await Promise.all([fetchResources(), fetchSummary()]);
-      setIsDeleteModalOpen(false);
-      setResourceToDelete(null);
+      setTimeout(() => {
+        setIsDeleteModalOpen(false);
+        setResourceToDelete(null);
+        setSuccess(null);
+      }, 1500);
     } catch (error) {
       console.error('Error deleting resource:', error);
+      setError('Failed to delete resource. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -394,6 +402,21 @@ const ResourceManagement = () => {
                 This action is irreversible.
               </p>
             </div>
+
+            {success && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center gap-3 text-emerald-700 animate-in fade-in slide-in-from-top-4">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-bold text-sm">{success}</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center justify-center gap-3 text-red-700 animate-in fade-in slide-in-from-top-4">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-bold text-sm">{error}</span>
+              </div>
+            )}
+
             <div className="flex flex-col gap-4">
               <button 
                 onClick={handleDelete}
