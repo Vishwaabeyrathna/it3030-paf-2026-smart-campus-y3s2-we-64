@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { getBookingAnalytics } from '../services/bookingService'
 import UserManagement from '../components/UserManagement'
 
 function StatCard({ label, value, icon, color }) {
@@ -26,6 +28,28 @@ function StatCard({ label, value, icon, color }) {
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+  const [analyticsError, setAnalyticsError] = useState(null)
+
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        setAnalyticsLoading(true)
+        const data = await getBookingAnalytics()
+        setAnalytics(data)
+      } catch (error) {
+        setAnalyticsError(error.message || 'Failed to fetch analytics')
+      } finally {
+        setAnalyticsLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }, [])
+
+  const topResources = analytics?.topResources ?? []
+  const peakHours = analytics?.peakHours ?? []
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -120,10 +144,71 @@ export default function AdminDashboard() {
         <div className="px-8 py-7 space-y-8">
           {/* Stat cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Users"     value="—" icon="👥" color="blue" />
-            <StatCard label="Open Requests"   value="—" icon="📋" color="amber" />
-            <StatCard label="Technicians"     value="—" icon="🔧" color="purple" />
-            <StatCard label="Resolved Today"  value="—" icon="✅" color="emerald" />
+            <StatCard label="Total Bookings" value={analytics?.totalBookings ?? '—'} icon="📊" color="blue" />
+            <StatCard label="Approved Bookings" value={analytics?.approvedBookings ?? '—'} icon="✅" color="emerald" />
+            <StatCard label="Pending Bookings" value={analytics?.pendingBookings ?? '—'} icon="⏳" color="amber" />
+            <StatCard label="Resources Used" value={analytics?.uniqueResourcesBooked ?? '—'} icon="🏷️" color="purple" />
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">Top Resources</h2>
+                  <p className="text-sm text-slate-500 mt-1">Most booked resources by count.</p>
+                </div>
+                {analyticsLoading && <p className="text-sm text-slate-400">Loading…</p>}
+              </div>
+
+              {analyticsError && <p className="text-red-600 text-sm mb-4">{analyticsError}</p>}
+
+              {topResources.length > 0 ? (
+                <div className="space-y-4">
+                  {topResources.map((resource) => {
+                    const maxCount = topResources[0]?.bookingCount || 1
+                    const width = Math.max(10, Math.round((resource.bookingCount / maxCount) * 100))
+                    return (
+                      <div key={resource.resourceName}>
+                        <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                          <span>{resource.resourceName}</span>
+                          <span className="font-semibold text-slate-800">{resource.bookingCount}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div className="h-full rounded-full bg-purple-600" style={{ width: `${width}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">No booking data available yet.</p>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-800">Peak Booking Hours</h2>
+                  <p className="text-sm text-slate-500 mt-1">Hours with the most bookings.</p>
+                </div>
+                {analyticsLoading && <p className="text-sm text-slate-400">Loading…</p>}
+              </div>
+
+              {analyticsError && <p className="text-red-600 text-sm mb-4">{analyticsError}</p>}
+
+              {peakHours.length > 0 ? (
+                <div className="space-y-3">
+                  {peakHours.map((hour) => (
+                    <div key={hour.hourLabel} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-700">{hour.hourLabel}</span>
+                      <span className="text-sm text-slate-500">{hour.bookings} bookings</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">No booking hour data available yet.</p>
+              )}
+            </div>
           </div>
 
           {/* User management */}
