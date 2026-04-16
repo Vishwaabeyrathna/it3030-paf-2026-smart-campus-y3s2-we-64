@@ -3,13 +3,22 @@ package com.smartcampus.back_end.controller;
 import com.smartcampus.back_end.model.Role;
 import com.smartcampus.back_end.model.User;
 import com.smartcampus.back_end.repository.UserRepository;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -22,17 +31,72 @@ public class AdminController {
         this.userRepository = userRepository;
     }
 
+    private static final String UPLOAD_DIR = "uploads/avatars/";
+
+    private Map<String, Object> toUserMap(User u) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", u.getId());
+        m.put("email", u.getEmail());
+        m.put("name", u.getName());
+        m.put("picture", u.getPicture() != null ? u.getPicture() : "");
+        m.put("role", u.getRole().name());
+        m.put("phone", u.getPhone() != null ? u.getPhone() : "");
+        m.put("address", u.getAddress() != null ? u.getAddress() : "");
+        return m;
+    }
+
     @GetMapping("/users")
     public List<Map<String, Object>> listUsers() {
         return userRepository.findAll().stream()
-                .map(u -> Map.<String, Object>of(
-                        "id", u.getId(),
-                        "email", u.getEmail(),
-                        "name", u.getName(),
-                        "picture", u.getPicture() != null ? u.getPicture() : "",
-                        "role", u.getRole().name()
-                ))
+                .map(this::toUserMap)
                 .toList();
+    }
+
+    @PatchMapping(value = "/users/{id}/profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> editUserProfile(
+            @PathVariable Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) MultipartFile photo,
+            @RequestParam(required = false, defaultValue = "false") boolean removePhoto
+    ) throws IOException {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
+
+        if (name != null && !name.isBlank()) {
+            user.setName(name.trim());
+        }
+        user.setPhone(phone != null ? phone.trim() : null);
+        user.setAddress(address != null ? address.trim() : null);
+
+        if (removePhoto) {
+            deleteOldAvatar(user.getPicture());
+            user.setPicture(null);
+        } else if (photo != null && !photo.isEmpty()) {
+            deleteOldAvatar(user.getPicture());
+            user.setPicture(savePhoto(photo));
+        }
+
+        userRepository.save(user);
+        return ResponseEntity.ok(toUserMap(user));
+    }
+
+    private String savePhoto(MultipartFile photo) throws IOException {
+        Path uploadPath = Paths.get(UPLOAD_DIR);
+        if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+        String original = photo.getOriginalFilename();
+        String ext = (original != null && original.contains("."))
+                ? original.substring(original.lastIndexOf(".")) : ".jpg";
+        String filename = UUID.randomUUID() + ext;
+        Files.copy(photo.getInputStream(), uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+        return "/uploads/avatars/" + filename;
+    }
+
+    private void deleteOldAvatar(String pictureUrl) {
+        if (pictureUrl == null || !pictureUrl.startsWith("/uploads/avatars/")) return;
+        try { Files.deleteIfExists(Paths.get(pictureUrl.substring(1))); } catch (IOException ignored) {}
     }
 
     @PatchMapping("/users/{id}/role")
