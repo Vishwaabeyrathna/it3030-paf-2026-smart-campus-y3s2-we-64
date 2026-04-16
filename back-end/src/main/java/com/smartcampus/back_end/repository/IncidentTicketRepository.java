@@ -12,4 +12,5 @@ public interface IncidentTicketRepository extends JpaRepository<IncidentTicket, 
     List<IncidentTicket> findByCreator(User creator);
     List<IncidentTicket> findByCategory(String category);
     List<IncidentTicket> findByStatus(String status);
+    List<IncidentTicket> findByAssignedTechnician(User technician);
 }
