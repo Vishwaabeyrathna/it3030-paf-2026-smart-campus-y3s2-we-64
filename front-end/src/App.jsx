@@ -5,6 +5,7 @@ import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AddResourcePage from './pages/AddResourcePage'
 import EditResourcePage from './pages/EditResourcePage'
+import ResourceDetailPage from './pages/ResourceDetailPage'
 import TechnicianDashboard from './pages/TechnicianDashboard'
 import UserResourcePage from './pages/UserResourcePage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -24,6 +25,14 @@ function App() {
         element={
           <ProtectedRoute roles={['USER', 'ADMIN', 'STUDENT']}>
             <UserResourcePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resources/:id"
+        element={
+          <ProtectedRoute roles={['USER', 'ADMIN', 'STUDENT']}>
+            <ResourceDetailPage />
           </ProtectedRoute>
         }
       />

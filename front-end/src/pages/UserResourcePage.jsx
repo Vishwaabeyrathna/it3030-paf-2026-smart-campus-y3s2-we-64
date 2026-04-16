@@ -38,7 +38,14 @@ const ResourceCard = ({ resource, onDetails }) => {
       <div className='p-5 flex-1 flex flex-col'>
         <div className='mb-3'><h3 className='text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1'>{resource.name}</h3><div className='flex items-center gap-1.5 text-slate-500 text-xs'><MapPin className='w-3.5 h-3.5' /><span className='truncate'>{resource.location}</span></div></div>
         <div className='grid grid-cols-2 gap-3 mb-5'><div className='bg-slate-50 rounded-xl p-2.5 border border-slate-100'><p className='text-[10px] text-slate-400 font-bold uppercase'>Capacity</p><p className='text-sm font-bold text-slate-700'>{resource.capacity}</p></div><div className='bg-slate-50 rounded-xl p-2.5 border border-slate-100'><p className='text-[10px] text-slate-400 font-bold uppercase'>Status</p><p className='text-sm font-bold text-slate-700'>Pristine</p></div></div>
-        <div className='mt-auto flex items-center gap-2'><button onClick={() => onDetails(resource.id)} className='flex-1 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-all'>Details</button><button disabled={!isAvailable} className={cn('p-2.5 rounded-xl transition-all', isAvailable ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}><Calendar className='w-4 h-4' /></button></div>
+        <div className='mt-auto flex items-center gap-2'>
+          <button 
+            onClick={() => navigate('/resources/' + resource.id)} 
+            className='flex-1 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-all'
+          >
+            Details
+          </button>
+          <button disabled={!isAvailable} className={cn('p-2.5 rounded-xl transition-all', isAvailable ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}><Calendar className='w-4 h-4' /></button></div>
       </div>
     </div>
   );
