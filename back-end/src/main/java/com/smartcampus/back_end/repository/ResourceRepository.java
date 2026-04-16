@@ -12,4 +12,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
     Page<Resource> findByTypeAndStatus(String type, String status, Pageable pageable);
     Page<Resource> findByType(String type, Pageable pageable);
     Page<Resource> findByStatus(String status, Pageable pageable);
+    Page<Resource> findByStatusAndNameContainingIgnoreCase(String status, String name, Pageable pageable);
+    Page<Resource> findByStatusAndType(String status, String type, Pageable pageable);
+    Page<Resource> findByStatusAndTypeAndNameContainingIgnoreCase(String status, String type, String name, Pageable pageable);
+    long countByStatus(String status);
 }

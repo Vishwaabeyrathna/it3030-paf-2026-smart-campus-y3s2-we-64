@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.controller;
 
+import com.smartcampus.back_end.dto.ResourceSummaryDTO;
 import com.smartcampus.back_end.model.Resource;
 import com.smartcampus.back_end.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,12 @@ public class ResourceController {
 
     @Autowired
     private ResourceService resourceService;
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResourceSummaryDTO> getResourceSummary() {
+        return ResponseEntity.ok(resourceService.getResourceSummary());
+    }
 
     @GetMapping
     public ResponseEntity<Page<Resource>> getAllResources(

@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.service;
 
+import com.smartcampus.back_end.dto.ResourceSummaryDTO;
 import com.smartcampus.back_end.model.Resource;
 import com.smartcampus.back_end.repository.ResourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,13 @@ public class ResourceService {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    public ResourceSummaryDTO getResourceSummary() {
+        long total = resourceRepository.count();
+        long active = resourceRepository.countByStatus("Active");
+        long outOfService = resourceRepository.countByStatus("Out of Service");
+        return new ResourceSummaryDTO(total, active, outOfService);
+    }
 
     public Page<Resource> getAllResources(Pageable pageable) {
         return resourceRepository.findAll(pageable);
@@ -58,5 +66,18 @@ public class ResourceService {
 
     public void deleteResource(Long id) {
         resourceRepository.deleteById(id);
+    }
+
+    public Page<Resource> getActiveResources(String search, String type, Pageable pageable) {
+        String status = "Active";
+        if (type != null && search != null) {
+            return resourceRepository.findByStatusAndTypeAndNameContainingIgnoreCase(status, type, search, pageable);
+        } else if (type != null) {
+            return resourceRepository.findByStatusAndType(status, type, pageable);
+        } else if (search != null) {
+            return resourceRepository.findByStatusAndNameContainingIgnoreCase(status, search, pageable);
+        } else {
+            return resourceRepository.findByStatus(status, pageable);
+        }
     }
 }

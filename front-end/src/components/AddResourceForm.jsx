@@ -48,7 +48,11 @@ const AddResourceForm = () => {
     setLoading(true);
     setError(null);
     try {
+      const token = localStorage.getItem('token');
       await axios.post('http://localhost:8080/api/resources', formData, { 
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         withCredentials: true 
       });
       setSuccess(true);

@@ -5,6 +5,7 @@ import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AddResourcePage from './pages/AddResourcePage'
 import TechnicianDashboard from './pages/TechnicianDashboard'
+import UserResourcePage from './pages/UserResourcePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
 
@@ -17,6 +18,14 @@ function App() {
       {/* Role-based redirect from / */}
       <Route path="/" element={<RoleRedirect />} />
 
+      <Route
+        path="/resources"
+        element={
+          <ProtectedRoute roles={['USER', 'ADMIN', 'STUDENT']}>
+            <UserResourcePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard/user"
         element={
