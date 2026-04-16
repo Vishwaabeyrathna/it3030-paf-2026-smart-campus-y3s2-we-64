@@ -40,6 +40,13 @@ export async function getBookingById(id) {
   return res.data
 }
 
+export async function getBookingAnalytics() {
+  const res = await axios.get(`${API_BASE}/api/bookings/analytics`, {
+    headers: authHeaders(),
+  })
+  return res.data
+}
+
 export async function updateBookingStatus(id, statusData) {
   const res = await axios.put(`${API_BASE}/api/bookings/${id}/status`, statusData, {
     headers: authHeaders(),
