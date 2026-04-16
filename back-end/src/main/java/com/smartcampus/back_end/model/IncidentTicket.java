@@ -41,8 +41,19 @@ public class IncidentTicket {
     @JoinColumn(name = "user_id", nullable = false)
     private User creator;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_technician_id")
+    private User assignedTechnician;
+
+    // OPEN, IN_PROGRESS, RESOLVED, CLOSED, REJECTED
     @Column(nullable = false)
-    private String status = "OPEN"; // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+    private String status = "OPEN";
+
+    @Column(columnDefinition = "TEXT")
+    private String resolutionNote;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
