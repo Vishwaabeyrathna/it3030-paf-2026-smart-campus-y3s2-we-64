@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import OAuth2CallbackPage from './pages/OAuth2CallbackPage'
 import UserDashboard from './pages/UserDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import AddResourcePage from './pages/AddResourcePage'
 import TechnicianDashboard from './pages/TechnicianDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
@@ -26,6 +27,22 @@ function App() {
       />
       <Route
         path="/dashboard/admin"
+        element={
+          <ProtectedRoute roles={['ADMIN']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/resources/add"
+        element={
+          <ProtectedRoute roles={['ADMIN']}>
+            <AddResourcePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/resources"
         element={
           <ProtectedRoute roles={['ADMIN']}>
             <AdminDashboard />

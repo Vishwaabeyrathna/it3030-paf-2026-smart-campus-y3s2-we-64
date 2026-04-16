@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Search, Filter, MoreHorizontal, Edit2, Trash2, 
   ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2,
@@ -14,6 +15,7 @@ function cn(...inputs) {
 }
 
 const ResourceManagement = () => {
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -127,8 +129,7 @@ const ResourceManagement = () => {
           </div>
           <button 
             onClick={() => {
-              setSelectedResource(null);
-              setIsModalOpen(true);
+              navigate('/admin/resources/add');
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm hover:shadow-md active:scale-95 text-sm font-medium"
           >
