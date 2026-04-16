@@ -1,4 +1,3 @@
-
 package com.smartcampus.back_end.controller;
 
 import com.smartcampus.back_end.model.Resource;
@@ -70,5 +69,6 @@ public class ResourceController {
             "reason", reason
         );
     }
-}
 
+  
+}
