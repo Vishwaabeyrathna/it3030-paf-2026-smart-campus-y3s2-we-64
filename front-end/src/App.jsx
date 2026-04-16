@@ -11,6 +11,9 @@ import AddResourcePage from './pages/AddResourcePage'
 import ResourceDetailsPage from './pages/ResourceDetailsPage'
 import EditResourcePage from './pages/EditResourcePage'
 import ResourceAvailabilityPage from './pages/ResourceAvailabilityPage'
+import CreateBookingPage from './pages/CreateBookingPage'
+import MyBookingsPage from './pages/MyBookingsPage'
+import AdminBookingsPage from './pages/AdminBookingsPage'
 
 function App() {
   return (
@@ -27,6 +30,32 @@ function App() {
       <Route path="/resources/:id" element={<ResourceDetailsPage />} />
       <Route path="/resources/edit/:id" element={<EditResourcePage />} />
       <Route path="/resources/:id/availability" element={<ResourceAvailabilityPage />} />
+
+      {/* Booking Routes */}
+      <Route
+        path="/bookings/create"
+        element={
+          <ProtectedRoute roles={['USER']}>
+            <CreateBookingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bookings/my"
+        element={
+          <ProtectedRoute roles={['USER']}>
+            <MyBookingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/bookings"
+        element={
+          <ProtectedRoute roles={['ADMIN']}>
+            <AdminBookingsPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard/user"
