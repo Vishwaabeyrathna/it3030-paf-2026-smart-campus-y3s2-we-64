@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -6,6 +7,7 @@ import UserManagement from '../components/UserManagement'
 import TicketDetailModal from '../components/TicketDetailModal'
 import NotificationBell from '../components/NotificationBell'
 import ticketService from '../services/ticketService'
+import { getBookingAnalytics } from '../services/bookingService'
 
 const STATUS_STYLES = {
   OPEN:        'bg-amber-100 text-amber-700',
@@ -51,6 +53,9 @@ export default function AdminDashboard() {
   const [technicianList, setTechnicianList] = useState([])
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [stats, setStats] = useState({ users: 0, tickets: 0, technicians: 0, resolved: 0 })
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+  const [analyticsError, setAnalyticsError] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -72,10 +77,24 @@ export default function AdminDashboard() {
     }).catch(console.error)
   }, [])
 
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        setAnalyticsLoading(true)
+        const data = await getBookingAnalytics()
+        setAnalytics(data)
+      } catch (error) {
+        setAnalyticsError(error.message || 'Failed to fetch analytics')
+      } finally {
+        setAnalyticsLoading(false)
+      }
+    }
+    fetchAnalytics()
+  }, [])
+
   const handleTicketUpdated = (updated) => {
     setTickets(prev => prev.map(t => t.id === updated.id ? updated : t))
     setSelectedTicket(updated)
-    // Recompute stats
     setStats(prev => ({
       ...prev,
       resolved: tickets.map(t => t.id === updated.id ? updated : t).filter(t => t.status === 'RESOLVED').length,
@@ -138,6 +157,9 @@ export default function AdminDashboard() {
     )
   }
 
+  const topResources = analytics?.topResources ?? []
+  const peakHours = analytics?.peakHours ?? []
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
       {/* Sidebar */}
@@ -169,6 +191,14 @@ export default function AdminDashboard() {
               {item.label}
             </button>
           ))}
+          <Link to="/resources" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-300">
+            <span>📦</span>
+            Resources
+          </Link>
+          <Link to="/admin/bookings" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-300">
+            <span>📅</span>
+            Bookings
+          </Link>
         </nav>
 
         <div className="px-4 py-6 border-t border-slate-800/50">
@@ -203,6 +233,10 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <NotificationBell />
+              <Link to="/resources/new" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                Add Resource
+              </Link>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
                 Admin
               </span>
@@ -219,6 +253,72 @@ export default function AdminDashboard() {
                   <StatCard label="Technicians"     value={stats.technicians} icon="🔧" color="purple" />
                   <StatCard label="Resolved"        value={stats.resolved}    icon="✅" color="emerald" />
                 </div>
+
+                {/* Booking Analytics */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <StatCard label="Total Bookings"    value={analytics?.totalBookings ?? '—'}          icon="📊" color="blue" />
+                  <StatCard label="Approved Bookings" value={analytics?.approvedBookings ?? '—'}       icon="✅" color="emerald" />
+                  <StatCard label="Pending Bookings"  value={analytics?.pendingBookings ?? '—'}        icon="⏳" color="amber" />
+                  <StatCard label="Resources Used"    value={analytics?.uniqueResourcesBooked ?? '—'} icon="🏷️" color="purple" />
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-lg font-semibold text-slate-800">Top Resources</h2>
+                        <p className="text-sm text-slate-500 mt-1">Most booked resources by count.</p>
+                      </div>
+                      {analyticsLoading && <p className="text-sm text-slate-400">Loading…</p>}
+                    </div>
+                    {analyticsError && <p className="text-red-600 text-sm mb-4">{analyticsError}</p>}
+                    {topResources.length > 0 ? (
+                      <div className="space-y-4">
+                        {topResources.map((resource) => {
+                          const maxCount = topResources[0]?.bookingCount || 1
+                          const width = Math.max(10, Math.round((resource.bookingCount / maxCount) * 100))
+                          return (
+                            <div key={resource.resourceName}>
+                              <div className="flex items-center justify-between text-sm text-slate-600 mb-2">
+                                <span>{resource.resourceName}</span>
+                                <span className="font-semibold text-slate-800">{resource.bookingCount}</span>
+                              </div>
+                              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                                <div className="h-full rounded-full bg-purple-600" style={{ width: `${width}%` }} />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-sm">No booking data available yet.</p>
+                    )}
+                  </div>
+
+                  <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6">
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div>
+                        <h2 className="text-lg font-semibold text-slate-800">Peak Booking Hours</h2>
+                        <p className="text-sm text-slate-500 mt-1">Hours with the most bookings.</p>
+                      </div>
+                      {analyticsLoading && <p className="text-sm text-slate-400">Loading…</p>}
+                    </div>
+                    {analyticsError && <p className="text-red-600 text-sm mb-4">{analyticsError}</p>}
+                    {peakHours.length > 0 ? (
+                      <div className="space-y-3">
+                        {peakHours.map((hour) => (
+                          <div key={hour.hourLabel} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                            <span className="text-sm font-medium text-slate-700">{hour.hourLabel}</span>
+                            <span className="text-sm text-slate-500">{hour.bookings} bookings</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-sm">No booking hour data available yet.</p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                   <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
                     <div>

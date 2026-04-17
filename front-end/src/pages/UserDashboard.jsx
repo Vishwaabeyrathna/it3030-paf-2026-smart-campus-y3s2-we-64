@@ -30,7 +30,7 @@ function StatCard({ label, value, icon, color }) {
   }
   const c = colors[color] ?? colors.blue
   return (
-    <div className={`bg-white rounded-3xl p-5 border border-slate-100 flex items-center gap-4 hover:shadow-xl hover:shadow-slate-100 transition-all duration-300`}>
+    <div className="bg-white rounded-3xl p-5 border border-slate-100 flex items-center gap-4 hover:shadow-xl hover:shadow-slate-100 transition-all duration-300">
       <div className={`${c.icon} w-12 h-12 rounded-2xl flex items-center justify-center shrink-0`}>
         <span className="text-xl">{icon}</span>
       </div>
@@ -178,8 +178,8 @@ export default function UserDashboard() {
   }
 
   const navItems = [
-    { id: 'overview', label: 'Dashboard', icon: '🏠' },
-    { id: 'tickets',  label: 'My Tickets', icon: '📋' },
+    { id: 'overview', label: 'Dashboard',    icon: '🏠' },
+    { id: 'tickets',  label: 'My Tickets',   icon: '📋' },
     { id: 'new',      label: 'Report Issue', icon: '➕' },
   ]
 
@@ -216,9 +216,13 @@ export default function UserDashboard() {
               {item.label}
             </button>
           ))}
+          <Link to="/bookings/my" className="w-full flex items-center gap-3.5 px-5 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-all">
+            <span className="text-sm opacity-80">📅</span>
+            My Bookings
+          </Link>
         </nav>
 
-        {/* Profile Section - Strictly Fixed to Bottom */}
+        {/* Profile Section */}
         <div className="p-4 shrink-0 bg-slate-900 border-t border-slate-800/50">
           <div className="bg-slate-800/40 rounded-[2rem] p-4 border border-slate-800/50 backdrop-blur-md shadow-inner">
             <button
@@ -276,7 +280,7 @@ export default function UserDashboard() {
                     <StatCard label="In Progress"    value={stats.inProgress} icon="⏳" color="amber" />
                     <StatCard label="Resolved"       value={stats.resolved}   icon="✅" color="emerald" />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center border border-slate-800 min-h-[300px]">
                       <div className="relative z-10 space-y-4">
@@ -319,7 +323,7 @@ export default function UserDashboard() {
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                   <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white">
                     <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.25em]">Maintenance Ledger</h2>
-                    <button 
+                    <button
                       onClick={() => setActiveTab('new')}
                       className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95"
                     >
