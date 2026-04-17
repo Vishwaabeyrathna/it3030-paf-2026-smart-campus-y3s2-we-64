@@ -1,74 +1,115 @@
 package com.smartcampus.back_end.controller;
 
+import com.smartcampus.back_end.dto.ResourceSummaryDTO;
 import com.smartcampus.back_end.model.Resource;
-import com.smartcampus.back_end.repository.ResourceRepository;
-import jakarta.validation.Valid;
+import com.smartcampus.back_end.service.ImageStorageService;
+import com.smartcampus.back_end.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/resources")
-@CrossOrigin(origins = "*") // Update based on frontend URL
+@CrossOrigin(origins = "*")
 public class ResourceController {
 
     @Autowired
-    private ResourceRepository resourceRepository;
+    private ResourceService resourceService;
 
-    @GetMapping
-    public List<Resource> getAllResources() {
-        return resourceRepository.findAll();
+    @Autowired
+    private ImageStorageService imageStorageService;
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResourceSummaryDTO> getResourceSummary() {
+        return ResponseEntity.ok(resourceService.getResourceSummary());
     }
 
-    @PostMapping
-    public Resource createResource(@Valid @RequestBody Resource resource) {
-        return resourceRepository.save(resource);
+    @GetMapping
+    public ResponseEntity<Page<Resource>> getAllResources(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Resource> resources;
+
+        if (search != null && !search.isEmpty()) {
+            resources = resourceService.searchResources(search, pageable);
+        } else if (type != null || status != null) {
+            resources = resourceService.filterResources(type, status, pageable);
+        } else {
+            resources = resourceService.getAllResources(pageable);
+        }
+
+        return ResponseEntity.ok(resources);
     }
 
     @GetMapping("/{id}")
-    public Resource getResourceById(@PathVariable Long id) {
-        return resourceRepository.findById(id).orElseThrow(() -> new RuntimeException("Resource not found"));
+    public ResponseEntity<Resource> getResourceById(@PathVariable Long id) {
+        return resourceService.getResourceById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Resource createResource(@RequestBody Resource resource) {
+        return resourceService.createResource(resource);
+    }
+
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> uploadResourceImage(@RequestParam("image") MultipartFile image) {
+        String relativePath = imageStorageService.storeResourceImage(image);
+        String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(relativePath)
+                .toUriString();
+        return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
     @PutMapping("/{id}")
-    public Resource updateResource(@PathVariable Long id, @Valid @RequestBody Resource resourceDetails) {
-        Resource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found"));
-
-        resource.setName(resourceDetails.getName());
-        resource.setType(resourceDetails.getType());
-        resource.setCapacity(resourceDetails.getCapacity());
-        resource.setStatus(resourceDetails.getStatus());
-
-        return resourceRepository.save(resource);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Resource> updateResource(@PathVariable Long id, @RequestBody Resource resourceDetails) {
+        try {
+            return ResponseEntity.ok(resourceService.updateResource(id, resourceDetails));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteResource(@PathVariable Long id) {
-        resourceRepository.deleteById(id);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteResource(@PathVariable Long id) {
+        resourceService.deleteResource(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/availability")
-    public java.util.Map<String, Object> checkAvailability(@PathVariable Long id) {
-        Resource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found"));
-        
-        boolean isAvailable = "Available".equalsIgnoreCase(resource.getStatus());
-        String reason;
-        
-        if (isAvailable) {
-            reason = "This resource is currently marked as Available and is ready for booking or allocation.";
-        } else {
-            reason = "This resource is currently unavailable. Current status: " + resource.getStatus() + ". Please check back later.";
-        }
-        
-        return java.util.Map.of(
-            "available", isAvailable,
-            "status", resource.getStatus(),
-            "reason", reason
-        );
+    public ResponseEntity<Map<String, Object>> checkAvailability(@PathVariable Long id) {
+        return resourceService.getResourceById(id)
+                .map(resource -> {
+                    boolean isAvailable = "Available".equalsIgnoreCase(resource.getStatus());
+                    String reason = isAvailable
+                            ? "This resource is currently available and ready for booking."
+                            : "This resource is currently unavailable. Status: " + resource.getStatus();
+                    return ResponseEntity.ok(Map.<String, Object>of(
+                            "available", isAvailable,
+                            "status", resource.getStatus(),
+                            "reason", reason
+                    ));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
-
-  
 }

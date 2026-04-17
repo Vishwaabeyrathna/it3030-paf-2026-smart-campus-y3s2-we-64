@@ -48,19 +48,18 @@ function StatCard({ label, value, icon, color }) {
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab]       = useState('overview')
-  const [tickets, setTickets]           = useState([])
+  const [activeTab, setActiveTab]           = useState('overview')
+  const [tickets, setTickets]               = useState([])
   const [technicianList, setTechnicianList] = useState([])
   const [selectedTicket, setSelectedTicket] = useState(null)
-  const [stats, setStats] = useState({ users: 0, tickets: 0, technicians: 0, resolved: 0 })
-  const [analytics, setAnalytics] = useState(null)
+  const [stats, setStats]                   = useState({ users: 0, tickets: 0, technicians: 0, resolved: 0 })
+  const [analytics, setAnalytics]           = useState(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
   const [analyticsError, setAnalyticsError] = useState(null)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     const headers = { Authorization: `Bearer ${token}` }
-
     Promise.all([
       axios.get('http://localhost:8080/api/admin/users', { headers }),
       ticketService.getAllTickets(),
@@ -130,11 +129,7 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {display.map(ticket => (
-                <tr
-                  key={ticket.id}
-                  onClick={() => setSelectedTicket(ticket)}
-                  className="group bg-white hover:bg-slate-50 transition-all cursor-pointer"
-                >
+                <tr key={ticket.id} onClick={() => setSelectedTicket(ticket)} className="group bg-white hover:bg-slate-50 transition-all cursor-pointer">
                   <td className="px-5 py-4 first:rounded-l-xl border-y border-l border-slate-50 group-hover:border-slate-100 text-[10px] font-mono text-slate-400 italic">#{ticket.id}</td>
                   <td className="px-5 py-4 border-y border-slate-50 group-hover:border-slate-100 text-xs font-bold text-slate-800">{ticket.creatorName}</td>
                   <td className="px-5 py-4 border-y border-slate-50 group-hover:border-slate-100 text-[11px] text-slate-500">{ticket.resourceLocation}</td>
@@ -158,11 +153,10 @@ export default function AdminDashboard() {
   }
 
   const topResources = analytics?.topResources ?? []
-  const peakHours = analytics?.peakHours ?? []
+  const peakHours    = analytics?.peakHours ?? []
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
-      {/* Sidebar */}
       <aside className="w-64 bg-slate-900 flex flex-col shrink-0 overflow-y-auto h-screen sticky top-0">
         <div className="px-6 py-8 border-b border-slate-700/50">
           <div className="flex items-center gap-3">
@@ -178,34 +172,23 @@ export default function AdminDashboard() {
 
         <nav className="flex-1 px-3 py-8 space-y-1">
           {navItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
+            <button key={item.id} onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs transition-all duration-300 ${
-                activeTab === item.id
-                  ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              <span>{item.icon}</span>
-              {item.label}
+                activeTab === item.id ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}>
+              <span>{item.icon}</span>{item.label}
             </button>
           ))}
-          <Link to="/resources" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-300">
-            <span>📦</span>
-            Resources
+          <Link to="/admin/resources" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-300">
+            <span>📦</span>Resources
           </Link>
           <Link to="/admin/bookings" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all duration-300">
-            <span>📅</span>
-            Bookings
+            <span>📅</span>Bookings
           </Link>
         </nav>
 
         <div className="px-4 py-6 border-t border-slate-800/50">
-          <button
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-3 px-3 py-2 mb-3 w-full text-left hover:bg-slate-800/50 rounded-xl transition-all"
-          >
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-3 px-3 py-2 mb-3 w-full text-left hover:bg-slate-800/50 rounded-xl transition-all">
             {user?.picture
               ? <img src={user.picture.startsWith('http') ? user.picture : `http://localhost:8080${user.picture}`} alt="" className="w-9 h-9 rounded-full ring-2 ring-purple-500/30 object-cover shrink-0" />
               : <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-purple-400 flex items-center justify-center text-white font-black text-xs shrink-0">{user?.name?.[0]}</div>
@@ -223,7 +206,6 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 overflow-auto bg-slate-50 lg:p-4">
         <div className="min-h-full bg-white lg:rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col">
           <header className="px-10 py-8 flex items-center justify-between border-b border-slate-50 sticky top-0 z-20 backdrop-blur-xl bg-white/70">
@@ -233,18 +215,15 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <NotificationBell />
-              <Link to="/resources/new" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
+              <Link to="/admin/resources/add" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                 Add Resource
               </Link>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">
-                Admin
-              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.15em] shadow-lg shadow-slate-900/10">Admin</span>
             </div>
           </header>
 
           <div className="px-10 py-10 space-y-10">
-            {/* OVERVIEW */}
             {activeTab === 'overview' && (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -254,7 +233,6 @@ export default function AdminDashboard() {
                   <StatCard label="Resolved"        value={stats.resolved}    icon="✅" color="emerald" />
                 </div>
 
-                {/* Booking Analytics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   <StatCard label="Total Bookings"    value={analytics?.totalBookings ?? '—'}          icon="📊" color="blue" />
                   <StatCard label="Approved Bookings" value={analytics?.approvedBookings ?? '—'}       icon="✅" color="emerald" />
@@ -329,14 +307,11 @@ export default function AdminDashboard() {
                       View All
                     </button>
                   </div>
-                  <div className="p-6">
-                    <TicketTable rows={tickets} limit={5} />
-                  </div>
+                  <div className="p-6"><TicketTable rows={tickets} limit={5} /></div>
                 </div>
               </>
             )}
 
-            {/* USERS */}
             {activeTab === 'users' && (
               <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                 <div className="px-8 py-6 border-b border-slate-50">
@@ -346,20 +321,16 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* TICKETS */}
             {activeTab === 'tickets' && (
               <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                 <div className="px-8 py-6 border-b border-slate-50">
                   <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">All Incident Tickets</h2>
                   <p className="text-slate-400 text-[11px] mt-1">Click a row to assign technician, update status, or view comments</p>
                 </div>
-                <div className="p-6">
-                  <TicketTable rows={tickets} />
-                </div>
+                <div className="p-6"><TicketTable rows={tickets} /></div>
               </div>
             )}
 
-            {/* Other tabs placeholder */}
             {(activeTab === 'requests' || activeTab === 'settings') && (
               <div className="text-center py-32 bg-slate-50/30 rounded-[2rem] border border-dashed border-slate-200">
                 <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-sm border border-slate-100 mx-auto mb-6">✨</div>
@@ -371,7 +342,6 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      {/* Detail modal */}
       {selectedTicket && (
         <TicketDetailModal
           ticket={selectedTicket}

@@ -11,6 +11,7 @@ back-end/*.war
 # Uploaded user files
 # ========================
 back-end/uploads/
+front-end/uploads/
 
 # ========================
 # Node / React (Vite)
