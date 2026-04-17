@@ -2,14 +2,20 @@ package com.smartcampus.back_end.controller;
 
 import com.smartcampus.back_end.dto.ResourceSummaryDTO;
 import com.smartcampus.back_end.model.Resource;
+import com.smartcampus.back_end.service.ImageStorageService;
 import com.smartcampus.back_end.service.ResourceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/resources")
@@ -18,6 +24,9 @@ public class ResourceController {
 
     @Autowired
     private ResourceService resourceService;
+
+    @Autowired
+    private ImageStorageService imageStorageService;
 
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN')")
@@ -58,6 +67,17 @@ public class ResourceController {
     @PreAuthorize("hasRole('ADMIN')")
     public Resource createResource(@RequestBody Resource resource) {
         return resourceService.createResource(resource);
+    }
+
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> uploadResourceImage(@RequestParam("image") MultipartFile image) {
+        String relativePath = imageStorageService.storeResourceImage(image);
+        String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path(relativePath)
+                .toUriString();
+
+        return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
     @PutMapping("/{id}")
