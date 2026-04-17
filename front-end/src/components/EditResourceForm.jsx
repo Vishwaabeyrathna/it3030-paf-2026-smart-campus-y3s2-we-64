@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, School, LayoutDashboard, Calendar, 
   Ticket, Loader2, CheckCircle2, AlertCircle,
-  Save, X
+  Save, X, ImagePlus
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -14,6 +14,7 @@ function cn(...inputs) {
 }
 
 const EditResourceForm = () => {
+  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -21,13 +22,17 @@ const EditResourceForm = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const imageInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: '',
     type: 'Room',
     capacity: '',
     location: '',
-    status: 'Active'
+    status: 'Active',
+    imageUrl: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -40,6 +45,9 @@ const EditResourceForm = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setFormData(response.data);
+        if (response.data.imageUrl) {
+          setImagePreview(response.data.imageUrl);
+        }
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch resource details.');
@@ -48,6 +56,48 @@ const EditResourceForm = () => {
     };
     fetchResource();
   }, [id]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      setSelectedImage(null);
+      setImagePreview(formData.imageUrl || '');
+      setErrors(prev => ({ ...prev, image: null }));
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setSelectedImage(null);
+      setErrors(prev => ({ ...prev, image: 'Please select a valid image file.' }));
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setSelectedImage(null);
+      setErrors(prev => ({ ...prev, image: 'Image must be 5MB or smaller.' }));
+      return;
+    }
+
+    setSelectedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+    setErrors(prev => ({ ...prev, image: null }));
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
 
   const validate = () => {
     const newErrors = {};
@@ -69,7 +119,23 @@ const EditResourceForm = () => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:8080/api/resources/${id}`, formData, { 
+      const resourcePayload = { ...formData };
+
+      if (selectedImage) {
+        const uploadData = new FormData();
+        uploadData.append('image', selectedImage);
+
+        const uploadResponse = await axios.post('http://localhost:8080/api/resources/upload-image', uploadData, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
+        });
+
+        resourcePayload.imageUrl = uploadResponse.data?.imageUrl || '';
+      }
+
+      await axios.put(`http://localhost:8080/api/resources/${id}`, resourcePayload, { 
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -245,6 +311,45 @@ const EditResourceForm = () => {
                     <option value="Active">Active</option>
                     <option value="Out of Service">Out of Service</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Resource Image</label>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50/40 transition-all cursor-pointer">
+                      <ImagePlus className="w-5 h-5 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {selectedImage ? selectedImage.name : 'Change image (optional)'}
+                      </span>
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <p className="text-xs text-gray-500">Supported formats: JPG, PNG, GIF, WEBP (max 5MB)</p>
+
+                    {errors.image && <p className="text-xs text-red-600 font-medium">{errors.image}</p>}
+
+                    {imagePreview && (
+                      <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
+                        <img
+                          src={imagePreview}
+                          alt="Resource preview"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-3 right-3 p-2 bg-white/95 text-gray-700 rounded-lg shadow hover:text-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
