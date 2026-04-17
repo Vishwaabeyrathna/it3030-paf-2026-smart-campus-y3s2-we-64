@@ -32,6 +32,16 @@ const notificationService = {
   deleteAll: async () => {
     await axios.delete(API_URL, { headers: authHeaders() });
   },
+
+  getPreferences: async () => {
+    const response = await axios.get(`${API_URL}/preferences`, { headers: authHeaders() });
+    return response.data;
+  },
+
+  updatePreferences: async (disabledTypes) => {
+    const response = await axios.put(`${API_URL}/preferences`, { disabledTypes }, { headers: authHeaders() });
+    return response.data;
+  },
 };
 
 export default notificationService;
