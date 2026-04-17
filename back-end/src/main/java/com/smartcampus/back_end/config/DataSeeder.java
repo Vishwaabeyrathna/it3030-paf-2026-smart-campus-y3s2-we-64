@@ -60,14 +60,14 @@ public class DataSeeder implements ApplicationRunner {
     private void seedResources() {
         if (resourceRepository.count() == 0) {
             List<Resource> resources = List.of(
-                new Resource(null, "Lecture Hall A", "Room", 200, "Block A, Level 2", "Active"),
-                new Resource(null, "Computer Lab 1", "Lab", 40, "Block B, Level 1", "Active"),
-                new Resource(null, "Projector X1", "Equipment", null, "Library Media Room", "Active"),
-                new Resource(null, "Conference Room 2", "Room", 15, "Admin Building", "Out of Service"),
-                new Resource(null, "Physics Lab", "Lab", 30, "Science Block", "Active"),
-                new Resource(null, "Drone Alpha", "Equipment", null, "Tech Center", "Active"),
-                new Resource(null, "Seminar Room C", "Room", 50, "Student Hub", "Active"),
-                new Resource(null, "Networking Lab", "Lab", 25, "Block B, Level 3", "Out of Service")
+                new Resource(null, "Lecture Hall A", "Room", 200, "Block A, Level 2", "Active", null, null, null),
+                new Resource(null, "Computer Lab 1", "Lab", 40, "Block B, Level 1", "Active", null, null, null),
+                new Resource(null, "Projector X1", "Equipment", null, "Library Media Room", "Active", null, null, null),
+                new Resource(null, "Conference Room 2", "Room", 15, "Admin Building", "Out of Service", null, null, null),
+                new Resource(null, "Physics Lab", "Lab", 30, "Science Block", "Active", null, null, null),
+                new Resource(null, "Drone Alpha", "Equipment", null, "Tech Center", "Active", null, null, null),
+                new Resource(null, "Seminar Room C", "Room", 50, "Student Hub", "Active", null, null, null),
+                new Resource(null, "Networking Lab", "Lab", 25, "Block B, Level 3", "Out of Service", null, null, null)
             );
             resourceRepository.saveAll(resources);
             log.info("Seeded initial resources.");
