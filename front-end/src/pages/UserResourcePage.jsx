@@ -8,7 +8,7 @@ import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs) { return twMerge(clsx(inputs)); }
 
-const ResourceCard = ({ resource, onDetails }) => {
+const ResourceCard = ({ resource, navigate }) => {
   const isAvailable = resource.status === 'Active';
   const getTypeStyles = (type) => {
     switch(type) {
@@ -96,7 +96,7 @@ const UserResourcePage = () => {
         <div className='flex-1 overflow-auto p-12'>
           {loading ? (<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>{[...Array(8)].map((_, i) => (<div key={i} className='h-80 bg-slate-50 rounded-2xl animate-pulse border border-slate-100' />))}</div>) : (
             <>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12'>{resources.length > 0 ? (resources.map((resource) => (<ResourceCard key={resource.id} resource={resource} onDetails={(id) => navigate('/resources/' + id)} />))) : (<div className='col-span-full py-32 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200'><div className='w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm'><Search className='w-8 h-8 text-slate-200' /></div><h3 className='text-xl font-black text-slate-900 mb-2'>No Matching Assets</h3><p className='text-slate-400 text-sm font-medium'>Try adjusting your search or filters to find what you need.</p></div>)}</div>
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12'>{resources.length > 0 ? (resources.map((resource) => (<ResourceCard key={resource.id} resource={resource} navigate={navigate} />))) : (<div className='col-span-full py-32 text-center bg-slate-50 rounded-[2.5rem] border border-dashed border-slate-200'><div className='w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm'><Search className='w-8 h-8 text-slate-200' /></div><h3 className='text-xl font-black text-slate-900 mb-2'>No Matching Assets</h3><p className='text-slate-400 text-sm font-medium'>Try adjusting your search or filters to find what you need.</p></div>)}</div>
               {totalPages > 1 && (<div className='flex justify-center items-center gap-3'><button disabled={page === 0} onClick={() => setPage(p => p - 1)} className='p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all'><ChevronLeft className='w-5 h-5' /></button><div className='flex items-center gap-1.5'>{[...Array(totalPages)].map((_, i) => (<button key={i} onClick={() => { setPage(i); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={cn('w-10 h-10 rounded-xl font-bold text-xs transition-all', page === i ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'bg-white text-slate-400 hover:bg-slate-50')}>{i + 1}</button>))}</div><button disabled={page === totalPages - 1} onClick={() => setPage(p => p + 1)} className='p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-900 disabled:opacity-30 transition-all'><ChevronRight className='w-5 h-5' /></button></div>)}
             </>
           )}

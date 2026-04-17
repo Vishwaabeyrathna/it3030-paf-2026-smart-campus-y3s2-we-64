@@ -10,14 +10,13 @@ import ProtectedRoute from './components/ProtectedRoute'
 import RoleRedirect from './components/RoleRedirect'
 import ResourceListPage from './pages/ResourceListPage'
 import AddResourcePage from './pages/AddResourcePage'
-import ResourceDetailsPage from './pages/ResourceDetailsPage'
-import EditResourcePage from './pages/EditResourcePage'
 import ResourceAvailabilityPage from './pages/ResourceAvailabilityPage'
 import CreateBookingPage from './pages/CreateBookingPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import AdminBookingsPage from './pages/AdminBookingsPage'
 import ResourceDetailPage from './pages/ResourceDetailPage'
 import UserResourcePage from './pages/UserResourcePage'
+import EditResourcePage from './pages/EditResourcePage'
 
 function App() {
   return (
@@ -28,9 +27,9 @@ function App() {
       {/* Role-based redirect from / */}
       <Route path="/" element={<RoleRedirect />} />
 
-      {/* Resource Routes */}
+      {/* Resource Routes - accessible by all logged in users */}
       <Route path="/resources" element={
-        <ProtectedRoute roles={['USER', 'ADMIN', 'STUDENT']}>
+        <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
           <UserResourcePage />
         </ProtectedRoute>
       } />
@@ -40,7 +39,7 @@ function App() {
         </ProtectedRoute>
       } />
       <Route path="/resources/:id" element={
-        <ProtectedRoute roles={['USER', 'ADMIN', 'STUDENT']}>
+        <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
           <ResourceDetailPage />
         </ProtectedRoute>
       } />
@@ -49,7 +48,11 @@ function App() {
           <EditResourcePage />
         </ProtectedRoute>
       } />
-      <Route path="/resources/:id/availability" element={<ResourceAvailabilityPage />} />
+      <Route path="/resources/:id/availability" element={
+        <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
+          <ResourceAvailabilityPage />
+        </ProtectedRoute>
+      } />
 
       {/* Admin resource management */}
       <Route path="/admin/resources" element={
@@ -70,12 +73,12 @@ function App() {
 
       {/* Booking Routes */}
       <Route path="/bookings/create" element={
-        <ProtectedRoute roles={['USER']}>
+        <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
           <CreateBookingPage />
         </ProtectedRoute>
       } />
       <Route path="/bookings/my" element={
-        <ProtectedRoute roles={['USER']}>
+        <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
           <MyBookingsPage />
         </ProtectedRoute>
       } />

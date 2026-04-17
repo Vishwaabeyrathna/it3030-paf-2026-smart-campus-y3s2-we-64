@@ -15,7 +15,7 @@ const ResourceListPage = () => {
       const response = await axios.get('http://localhost:8080/api/resources', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setResources(response.data);
+      setResources(response.data.content ?? response.data);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching resources:", err);

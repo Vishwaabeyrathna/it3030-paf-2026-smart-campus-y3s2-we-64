@@ -35,7 +35,7 @@ export default function CreateBookingPage() {
   useEffect(() => {
     setLoadingResources(true)
     axios.get('http://localhost:8080/api/resources', { headers: authHeaders() })
-      .then(res => setResources(res.data ?? []))
+      .then(res => setResources(res.data?.content ?? res.data ?? []))
       .catch(() => setServerError('Failed to load resources.'))
       .finally(() => setLoadingResources(false))
   }, [])

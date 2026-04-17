@@ -11,11 +11,12 @@ import {
 
 const cn = (...inputs) => inputs.filter(Boolean).join(' ');
 
-const SummaryCard = ({ title, value, icon: Icon, colorClass, loading, trend }) => (
+// eslint-disable-next-line no-unused-vars
+const SummaryCard = ({ title, value, icon: SummaryIcon, colorClass, loading, trend }) => (
   <div className="group bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex flex-col gap-6 transition-all hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1">
     <div className="flex justify-between items-start">
       <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110", colorClass)}>
-        <Icon className="w-7 h-7" />
+        <SummaryIcon className="w-7 h-7" />
       </div>
       {trend && (
         <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">
@@ -48,7 +49,6 @@ const ResourceManagement = () => {
   const [resourceToDelete, setResourceToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [success, setSuccess] = useState(null);
-  const [error, setError] = useState(null);
 
   const fetchSummary = async () => {
     setSummaryLoading(true);
@@ -59,8 +59,8 @@ const ResourceManagement = () => {
         withCredentials: true 
       });
       setSummary(response.data);
-    } catch (error) {
-      console.error('Error fetching summary:', error);
+    } catch (err) {
+      console.error('Error fetching summary:', err);
     } finally {
       setTimeout(() => setSummaryLoading(false), 400);
     }
@@ -85,8 +85,8 @@ const ResourceManagement = () => {
       });
       setResources(response.data.content);
       setTotalPages(response.data.totalPages);
-    } catch (error) {
-      console.error('Error fetching resources:', error);
+    } catch (err) {
+      console.error('Error fetching resources:', err);
     } finally {
       setTimeout(() => setLoading(false), 300);
     }
@@ -100,7 +100,6 @@ const ResourceManagement = () => {
   const handleDelete = async () => {
     if (!resourceToDelete) return;
     setIsDeleting(true);
-    setError(null);
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:8080/api/resources/${resourceToDelete.id}`, { 
@@ -111,8 +110,8 @@ const ResourceManagement = () => {
       fetchResources();
       fetchSummary();
       setTimeout(() => { setResourceToDelete(null); setSuccess(null); }, 2000);
-    } catch (error) {
-      setError('Failed to delete resource');
+    } catch {
+      console.error('Failed to delete resource');
     } finally {
       setIsDeleting(false);
     }

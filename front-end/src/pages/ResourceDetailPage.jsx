@@ -16,7 +16,7 @@ function cn(...inputs) { return twMerge(clsx(inputs)); }
 const ResourceDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
