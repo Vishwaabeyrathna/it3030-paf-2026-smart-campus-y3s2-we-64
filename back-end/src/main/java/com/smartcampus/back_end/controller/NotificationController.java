@@ -1,5 +1,6 @@
 package com.smartcampus.back_end.controller;
 
+import com.smartcampus.back_end.dto.NotificationPreferenceDTO;
 import com.smartcampus.back_end.dto.NotificationResponseDTO;
 import com.smartcampus.back_end.model.User;
 import com.smartcampus.back_end.repository.UserRepository;
@@ -67,6 +68,21 @@ public class NotificationController {
         User user = getUser(email);
         notificationService.deleteAllForUser(user);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/preferences")
+    public ResponseEntity<NotificationPreferenceDTO> getPreferences(
+            @AuthenticationPrincipal String email) {
+        User user = getUser(email);
+        return ResponseEntity.ok(notificationService.getPreferences(user));
+    }
+
+    @PutMapping("/preferences")
+    public ResponseEntity<NotificationPreferenceDTO> updatePreferences(
+            @AuthenticationPrincipal String email,
+            @RequestBody NotificationPreferenceDTO dto) {
+        User user = getUser(email);
+        return ResponseEntity.ok(notificationService.updatePreferences(user, dto));
     }
 
     private User getUser(String email) {

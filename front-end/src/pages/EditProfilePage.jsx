@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import profileService from '../services/profileService'
+import NotificationPreferencesPanel from '../components/NotificationPreferencesPanel'
 
 const BACKEND_URL = 'http://localhost:8080'
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024 // 5 MB
@@ -378,6 +379,9 @@ export default function EditProfilePage() {
                 }
               </div>
             </div>
+
+            {/* ── Notification Preferences ── */}
+            <NotificationPreferencesPanel userRole={user?.role} />
 
             {/* ── Submit feedback ── */}
             {submitError && (

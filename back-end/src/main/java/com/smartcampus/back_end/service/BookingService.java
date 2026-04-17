@@ -25,13 +25,16 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
+    private final NotificationService notificationService;
 
     public BookingService(BookingRepository bookingRepository,
                           UserRepository userRepository,
-                          ResourceRepository resourceRepository) {
+                          ResourceRepository resourceRepository,
+                          NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.resourceRepository = resourceRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -69,6 +72,7 @@ public class BookingService {
         booking.setAdminReason(null);
 
         Booking saved = bookingRepository.save(booking);
+        notificationService.notifyAdminsNewBooking(saved);
         return toResponseDTO(saved);
     }
 
@@ -213,6 +217,9 @@ public class BookingService {
 
             booking.setStatus(BookingStatus.APPROVED);
             booking.setAdminReason(null);
+            Booking approvedBooking = bookingRepository.save(booking);
+            notificationService.notifyUserBookingApproved(approvedBooking);
+            return toResponseDTO(approvedBooking);
         } else {
             String reason = dto.getAdminReason();
             if (reason == null || reason.isBlank()) {
@@ -220,9 +227,10 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.REJECTED);
             booking.setAdminReason(reason.trim());
+            Booking rejectedBooking = bookingRepository.save(booking);
+            notificationService.notifyUserBookingRejected(rejectedBooking);
+            return toResponseDTO(rejectedBooking);
         }
-
-        return toResponseDTO(bookingRepository.save(booking));
     }
 
     private BookingResponseDTO userCancelBooking(Booking booking, BookingStatusUpdateDTO dto, User actor) {
@@ -243,7 +251,9 @@ public class BookingService {
             booking.setAdminReason(dto.getAdminReason().trim());
         }
 
-        return toResponseDTO(bookingRepository.save(booking));
+        Booking cancelledBooking = bookingRepository.save(booking);
+        notificationService.notifyAdminsBookingCancelled(cancelledBooking);
+        return toResponseDTO(cancelledBooking);
     }
 
     private void validateTimes(LocalDate date, LocalTime startTime, LocalTime endTime) {
