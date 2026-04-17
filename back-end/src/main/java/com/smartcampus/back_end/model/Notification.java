@@ -28,6 +28,8 @@ public class Notification {
 
     private Long ticketId; // reference to related ticket for deep-linking
 
+    private Long bookingId; // reference to related booking for deep-linking
+
     @Column(nullable = false)
     private boolean isRead = false;
 
@@ -44,5 +46,13 @@ public class Notification {
         this.message = message;
         this.type = type;
         this.ticketId = ticketId;
+    }
+
+    public Notification(User user, String message, String type, Long ticketId, Long bookingId) {
+        this.user = user;
+        this.message = message;
+        this.type = type;
+        this.ticketId = ticketId;
+        this.bookingId = bookingId;
     }
 }

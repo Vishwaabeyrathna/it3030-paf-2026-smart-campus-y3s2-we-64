@@ -1,6 +1,7 @@
 package com.smartcampus.back_end.service;
 
 import com.smartcampus.back_end.dto.NotificationResponseDTO;
+import com.smartcampus.back_end.model.Booking;
 import com.smartcampus.back_end.model.IncidentTicket;
 import com.smartcampus.back_end.model.Notification;
 import com.smartcampus.back_end.model.Role;
@@ -85,6 +86,49 @@ public class NotificationService {
                         new Notification(u, message, "COMMENT_ADDED", ticket.getId())));
     }
 
+    // ── Booking notification triggers ─────────────────────────────────────────
+
+    /** Notify all admins when a user creates a new booking. */
+    public void notifyAdminsNewBooking(Booking booking) {
+        String message = booking.getUser().getName() + " requested a booking for \""
+                + booking.getResource().getName() + "\" on " + booking.getDate()
+                + " (" + booking.getStartTime() + " – " + booking.getEndTime() + ")";
+        userRepository.findAll().stream()
+                .filter(u -> u.getRole() == Role.ADMIN)
+                .forEach(admin -> notificationRepository.save(
+                        new Notification(admin, message, "BOOKING_CREATED", null, booking.getId())));
+    }
+
+    /** Notify the booking creator that their booking was approved. */
+    public void notifyUserBookingApproved(Booking booking) {
+        String message = "Your booking for \"" + booking.getResource().getName()
+                + "\" on " + booking.getDate()
+                + " (" + booking.getStartTime() + " – " + booking.getEndTime() + ") has been approved.";
+        notificationRepository.save(
+                new Notification(booking.getUser(), message, "BOOKING_APPROVED", null, booking.getId()));
+    }
+
+    /** Notify the booking creator that their booking was rejected, including the reason. */
+    public void notifyUserBookingRejected(Booking booking) {
+        String message = "Your booking for \"" + booking.getResource().getName()
+                + "\" on " + booking.getDate()
+                + " (" + booking.getStartTime() + " – " + booking.getEndTime() + ") was rejected."
+                + (booking.getAdminReason() != null ? " Reason: " + booking.getAdminReason() : "");
+        notificationRepository.save(
+                new Notification(booking.getUser(), message, "BOOKING_REJECTED", null, booking.getId()));
+    }
+
+    /** Notify all admins when a user cancels a booking. */
+    public void notifyAdminsBookingCancelled(Booking booking) {
+        String message = booking.getUser().getName() + " cancelled their booking for \""
+                + booking.getResource().getName() + "\" on " + booking.getDate()
+                + " (" + booking.getStartTime() + " – " + booking.getEndTime() + ")";
+        userRepository.findAll().stream()
+                .filter(u -> u.getRole() == Role.ADMIN)
+                .forEach(admin -> notificationRepository.save(
+                        new Notification(admin, message, "BOOKING_CANCELLED", null, booking.getId())));
+    }
+
     // ── Queries ───────────────────────────────────────────────────────────────
 
     public List<NotificationResponseDTO> getNotificationsForUser(User user) {
@@ -143,6 +187,7 @@ public class NotificationService {
                 .isRead(n.isRead())
                 .createdAt(n.getCreatedAt())
                 .ticketId(n.getTicketId())
+                .bookingId(n.getBookingId())
                 .build();
     }
 }

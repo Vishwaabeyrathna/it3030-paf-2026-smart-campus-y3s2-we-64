@@ -16,4 +16,5 @@ public class NotificationResponseDTO {
     private boolean isRead;
     private LocalDateTime createdAt;
     private Long ticketId;
+    private Long bookingId;
 }
