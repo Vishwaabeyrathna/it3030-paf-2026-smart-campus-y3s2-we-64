@@ -152,6 +152,18 @@ public class NotificationService {
                         new Notification(admin, message, "BOOKING_CANCELLED", null, booking.getId())));
     }
 
+    /** Notify all admins when a user updates a pending booking. */
+    public void notifyAdminsBookingUpdated(Booking booking) {
+        String message = booking.getUser().getName() + " updated a booking for \""
+                + booking.getResource().getName() + "\" on " + booking.getDate()
+                + " (" + booking.getStartTime() + " – " + booking.getEndTime() + ")";
+        userRepository.findAll().stream()
+                .filter(u -> u.getRole() == Role.ADMIN)
+                .filter(u -> isEnabled(u, "BOOKING_UPDATED"))
+                .forEach(admin -> notificationRepository.save(
+                        new Notification(admin, message, "BOOKING_UPDATED", null, booking.getId())));
+    }
+
     // ── Preference management ─────────────────────────────────────────────────
 
     public NotificationPreferenceDTO getPreferences(User user) {
