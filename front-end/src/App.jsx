@@ -16,6 +16,7 @@ import MyBookingsPage from './pages/MyBookingsPage'
 import AdminBookingsPage from './pages/AdminBookingsPage'
 import BookingDetailsPage from './pages/BookingDetailsPage'
 import EditBookingPage from './pages/EditBookingPage'
+import BookingCheckInPage from './pages/BookingCheckInPage'
 import ResourceDetailPage from './pages/ResourceDetailPage'
 import UserResourcePage from './pages/UserResourcePage'
 import EditResourcePage from './pages/EditResourcePage'
@@ -97,6 +98,12 @@ function App() {
       <Route path="/admin/bookings" element={
         <ProtectedRoute roles={['ADMIN']}>
           <AdminBookingsPage />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bookings/checkin" element={
+        <ProtectedRoute roles={['ADMIN', 'TECHNICIAN']}>
+          <BookingCheckInPage />
         </ProtectedRoute>
       } />
 
