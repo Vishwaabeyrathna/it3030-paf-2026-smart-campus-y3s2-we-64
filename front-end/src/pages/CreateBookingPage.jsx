@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { createBooking } from '../services/bookingService'
+import RoleSidebarLayout from '../components/RoleSidebarLayout'
 
 function authHeaders() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -108,116 +109,118 @@ export default function CreateBookingPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold text-gray-800">Create Booking</h1>
-      <p className="text-sm text-gray-500 mt-1">Book a campus resource for a specific date and time.</p>
+    <RoleSidebarLayout>
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-gray-800">Create Booking</h1>
+        <p className="text-sm text-gray-500 mt-1">Book a campus resource for a specific date and time.</p>
 
-      <form onSubmit={onSubmit} className="mt-6 bg-white border border-gray-100 rounded-2xl p-6">
-        {serverError && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {serverError}
-          </div>
-        )}
-        {success && (
-          <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-            {success}
-          </div>
-        )}
+        <form onSubmit={onSubmit} className="mt-6 bg-white border border-gray-100 rounded-2xl p-6">
+          {serverError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {serverError}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {success}
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Resource</label>
-            <select
-              value={resourceId}
-              onChange={(e) => setResourceId(e.target.value)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Resource</label>
+              <select
+                value={resourceId}
+                onChange={(e) => setResourceId(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                disabled={loadingResources}
+              >
+                <option value="">{loadingResources ? 'Loading…' : 'Select a resource'}</option>
+                {resourceOptions.map(r => (
+                  <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
+                ))}
+              </select>
+              {errors.resourceId && <p className="text-xs text-red-600 mt-1">{errors.resourceId}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+              {errors.date && <p className="text-xs text-red-600 mt-1">{errors.date}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Start Time</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+              {errors.startTime && <p className="text-xs text-red-600 mt-1">{errors.startTime}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">End Time</label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+              {errors.endTime && <p className="text-xs text-red-600 mt-1">{errors.endTime}</p>}
+            </div>
+          </div>
+
+          {errors.time && <p className="text-xs text-red-600 mt-2">{errors.time}</p>}
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">Purpose</label>
+            <textarea
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              rows={4}
               className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              disabled={loadingResources}
+              placeholder="e.g., Club meeting / Lecture / Workshop"
+            />
+            {errors.purpose && <p className="text-xs text-red-600 mt-1">{errors.purpose}</p>}
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">Expected Attendees</label>
+            <input
+              type="number"
+              min={1}
+              value={expectedAttendees}
+              onChange={(e) => setExpectedAttendees(e.target.value)}
+              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+            />
+            {errors.expectedAttendees && <p className="text-xs text-red-600 mt-1">{errors.expectedAttendees}</p>}
+          </div>
+
+          <div className="mt-6 flex gap-3">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 disabled:opacity-60"
             >
-              <option value="">{loadingResources ? 'Loading…' : 'Select a resource'}</option>
-              {resourceOptions.map(r => (
-                <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
-              ))}
-            </select>
-            {errors.resourceId && <p className="text-xs text-red-600 mt-1">{errors.resourceId}</p>}
+              {submitting ? 'Submitting…' : 'Create Booking'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/bookings/my')}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              Go to My Bookings
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-            {errors.date && <p className="text-xs text-red-600 mt-1">{errors.date}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Start Time</label>
-            <input
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-            {errors.startTime && <p className="text-xs text-red-600 mt-1">{errors.startTime}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">End Time</label>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-            {errors.endTime && <p className="text-xs text-red-600 mt-1">{errors.endTime}</p>}
-          </div>
-        </div>
-
-        {errors.time && <p className="text-xs text-red-600 mt-2">{errors.time}</p>}
-
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">Purpose</label>
-          <textarea
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            rows={4}
-            className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            placeholder="e.g., Club meeting / Lecture / Workshop"
-          />
-          {errors.purpose && <p className="text-xs text-red-600 mt-1">{errors.purpose}</p>}
-        </div>
-
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">Expected Attendees</label>
-          <input
-            type="number"
-            min={1}
-            value={expectedAttendees}
-            onChange={(e) => setExpectedAttendees(e.target.value)}
-            className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-          />
-          {errors.expectedAttendees && <p className="text-xs text-red-600 mt-1">{errors.expectedAttendees}</p>}
-        </div>
-
-        <div className="mt-6 flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 disabled:opacity-60"
-          >
-            {submitting ? 'Submitting…' : 'Create Booking'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/bookings/my')}
-            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            Go to My Bookings
-          </button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
+    </RoleSidebarLayout>
   )
 }
