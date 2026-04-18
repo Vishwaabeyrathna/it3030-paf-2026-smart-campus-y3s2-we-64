@@ -24,12 +24,14 @@ public class AuthController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        return ResponseEntity.ok(Map.of(
-                "id", user.getId(),
-                "email", user.getEmail(),
-                "name", user.getName(),
-                "picture", user.getPicture() != null ? user.getPicture() : "",
-                "role", user.getRole().name()
-        ));
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("id", user.getId());
+        result.put("email", user.getEmail());
+        result.put("name", user.getName());
+        result.put("picture", user.getPicture() != null ? user.getPicture() : "");
+        result.put("role", user.getRole().name());
+        result.put("phone", user.getPhone() != null ? user.getPhone() : "");
+        result.put("address", user.getAddress() != null ? user.getAddress() : "");
+        return ResponseEntity.ok(result);
     }
 }
