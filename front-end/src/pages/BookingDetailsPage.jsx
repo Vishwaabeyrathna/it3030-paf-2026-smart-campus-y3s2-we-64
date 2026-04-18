@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import BookingStatusBadge from '../components/BookingStatusBadge'
 import { getBookingById } from '../services/bookingService'
 import { useAuth } from '../context/AuthContext'
@@ -17,11 +17,20 @@ function Field({ label, children }) {
 export default function BookingDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
 
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+
+  useEffect(() => {
+    const message = location.state?.flash
+    if (!message) return
+    setFlash(message)
+    navigate(location.pathname + location.search, { replace: true, state: {} })
+  }, [location.pathname, location.search, location.state, navigate])
 
   useEffect(() => {
     let mounted = true
@@ -69,6 +78,18 @@ export default function BookingDetailsPage() {
             )}
           </div>
         </div>
+
+        {flash && (
+          <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 text-emerald-700">
+            <p className="text-sm font-medium">{flash}</p>
+            <button
+              onClick={() => setFlash('')}
+              className="text-xs font-bold uppercase tracking-widest text-emerald-700/80 hover:text-emerald-800"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {loading && <p className="text-gray-400 text-sm mt-6">Loading booking…</p>}
         {!loading && error && <p className="text-red-600 text-sm mt-6">{error}</p>}

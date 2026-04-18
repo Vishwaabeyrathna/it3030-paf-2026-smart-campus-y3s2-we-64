@@ -4,10 +4,11 @@ import axios from 'axios';
 import { 
   ArrowLeft, MapPin, Users, Box, Monitor, Info, 
   Calendar, CheckCircle2, AlertCircle, Clock, 
-  ChevronRight, Layout, Sparkles, Building2, ShieldCheck,
-  CalendarCheck, History, Share2, Heart, MessageSquare
+  ChevronRight, Layout, Sparkles, ShieldCheck,
+  CalendarCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import RoleSidebarLayout from '../components/RoleSidebarLayout';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -16,7 +17,7 @@ function cn(...inputs) { return twMerge(clsx(inputs)); }
 const ResourceDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  useAuth();
+  const { user } = useAuth();
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,37 +45,42 @@ const ResourceDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Identity...</p>
+      <RoleSidebarLayout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Identity...</p>
+          </div>
         </div>
-      </div>
+      </RoleSidebarLayout>
     );
   }
 
   if (error || !resource) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center bg-white p-12 rounded-[2.5rem] border border-slate-200 shadow-xl">
-          <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-red-100">
-            <AlertCircle className="w-10 h-10 text-red-500" />
+      <RoleSidebarLayout>
+        <div className="min-h-[60vh] flex items-center justify-center p-6">
+          <div className="max-w-md w-full text-center bg-white p-12 rounded-[2.5rem] border border-slate-200 shadow-xl">
+            <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-red-100">
+              <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Access Restricted</h2>
+            <p className="text-slate-500 font-medium mb-10 leading-relaxed">{error || 'Resource not found'}</p>
+            <button onClick={() => navigate('/resources')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 transition-all">
+              <ArrowLeft className="w-5 h-5" />
+              Back to Discovery
+            </button>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">Access Restricted</h2>
-          <p className="text-slate-500 font-medium mb-10 leading-relaxed">{error || 'Resource not found'}</p>
-          <button onClick={() => navigate('/resources')} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 transition-all">
-            <ArrowLeft className="w-5 h-5" />
-            Back to Discovery
-          </button>
         </div>
-      </div>
+      </RoleSidebarLayout>
     );
   }
 
   const isAvailable = resource.status === 'Active';
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <RoleSidebarLayout>
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-10">
         <button onClick={() => navigate('/resources')} className="mb-10 flex items-center gap-3 text-slate-400 hover:text-blue-600 transition-all font-bold group">
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm group-hover:border-blue-200 group-hover:shadow-blue-500/10 transition-all">
@@ -138,76 +144,71 @@ const ResourceDetailPage = () => {
                     </div>
                   </div>
 
-                  <div className="mt-auto flex flex-wrap gap-4">
-                    <button
-                      disabled={!isAvailable}
-                      onClick={() => navigate(`/bookings/create?resourceId=${resource.id ?? id}`)}
-                      className="flex-1 py-4 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3"
-                    >
-                      <CalendarCheck className="w-5 h-5" />
-                      {isAvailable ? 'Book This Resource' : 'Waitlist Access'}
-                    </button>
-                    <button className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 hover:border-red-100 transition-all">
-                      <Heart className="w-6 h-6" />
-                    </button>
-                    <button className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-blue-600 hover:border-blue-100 transition-all">
-                      <Share2 className="w-6 h-6" />
-                    </button>
-                  </div>
+                  {!isAdmin && (
+                    <div className="mt-auto flex flex-wrap gap-4">
+                      <button
+                        disabled={!isAvailable}
+                        onClick={() => navigate(`/bookings/create?resourceId=${resource.id ?? id}`)}
+                        className="flex-1 py-4 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3"
+                      >
+                        <CalendarCheck className="w-5 h-5" />
+                        {isAvailable ? 'Book This Resource' : 'Waitlist Access'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
-              <div className="flex border-b border-slate-100 overflow-x-auto no-scrollbar">
-                {[
-                  { id: 'overview', label: 'Overview', icon: Layout },
-                  { id: 'amenities', label: 'Amenities', icon: Sparkles },
-                  { id: 'history', label: 'Recent Activity', icon: History },
-                  { id: 'reviews', label: 'Reviews', icon: MessageSquare },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "px-8 py-6 text-sm font-bold flex items-center gap-3 border-b-2 transition-all shrink-0",
-                      activeTab === tab.id ? "text-blue-600 border-blue-600 bg-blue-50/30" : "text-slate-400 border-transparent hover:text-slate-600"
-                    )}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="p-10">
-                {activeTab === 'overview' && (
-                  <div className="animate-in fade-in slide-in-from-bottom-2">
-                    <h3 className="text-xl font-black text-slate-900 mb-6 tracking-tight">Resource Highlights</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-3 mb-4">
-                          <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                          <p className="font-black text-slate-900 text-sm uppercase tracking-widest">Verified Facility</p>
+            {!isAdmin && (
+              <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div className="flex border-b border-slate-100 overflow-x-auto no-scrollbar">
+                  {[
+                    { id: 'overview', label: 'Overview', icon: Layout },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        "px-8 py-6 text-sm font-bold flex items-center gap-3 border-b-2 transition-all shrink-0",
+                        activeTab === tab.id ? "text-blue-600 border-blue-600 bg-blue-50/30" : "text-slate-400 border-transparent hover:text-slate-600"
+                      )}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="p-10">
+                  {activeTab === 'overview' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2">
+                      <h3 className="text-xl font-black text-slate-900 mb-6 tracking-tight">Resource Highlights</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex items-center gap-3 mb-4">
+                            <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                            <p className="font-black text-slate-900 text-sm uppercase tracking-widest">Verified Facility</p>
+                          </div>
+                          <p className="text-sm text-slate-500 font-medium leading-relaxed">This resource has been recently inspected by regional campus staff and meets all standard operating procedures for {resource.type} usage.</p>
                         </div>
-                        <p className="text-sm text-slate-500 font-medium leading-relaxed">This resource has been recently inspected by regional campus staff and meets all standard operating procedures for {resource.type} usage.</p>
-                      </div>
-                      <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div className="flex items-center gap-3 mb-4">
-                          <Clock className="w-5 h-5 text-indigo-600" />
-                          <p className="font-black text-slate-900 text-sm uppercase tracking-widest">Usage Rights</p>
+                        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                          <div className="flex items-center gap-3 mb-4">
+                            <Clock className="w-5 h-5 text-indigo-600" />
+                            <p className="font-black text-slate-900 text-sm uppercase tracking-widest">Usage Rights</p>
+                          </div>
+                          <p className="text-sm text-slate-500 font-medium leading-relaxed">Standard 4-hour booking windows apply. Advanced recurring reservations require department head approval.</p>
                         </div>
-                        <p className="text-sm text-slate-500 font-medium leading-relaxed">Standard 4-hour booking windows apply. Advanced recurring reservations require department head approval.</p>
                       </div>
                     </div>
-                  </div>
-                )}
-                {activeTab !== 'overview' && (
-                  <div className="py-12 text-center text-slate-400 italic font-medium animate-in fade-in">
-                    Additional data for {activeTab} will be available in the next version update.
-                  </div>
-                )}
+                  )}
+                  {activeTab !== 'overview' && (
+                    <div className="py-12 text-center text-slate-400 italic font-medium animate-in fade-in">
+                      Additional data for {activeTab} will be available in the next version update.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="lg:col-span-12 xl:col-span-4 space-y-8">
@@ -234,22 +235,10 @@ const ResourceDetailPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-sm">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 px-2">Location Identity</h3>
-              <div className="bg-slate-100 rounded-3xl h-64 w-full flex flex-col items-center justify-center border border-slate-200 p-8 text-center gap-4 group">
-                <div className="p-5 bg-white rounded-full shadow-lg text-blue-600 transition-transform group-hover:scale-110">
-                  <Building2 className="w-8 h-8" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-slate-900 group-hover:text-blue-600 transition-colors">{resource.location}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Campus Interactive Map</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-    </div>
+    </RoleSidebarLayout>
   );
 };
 

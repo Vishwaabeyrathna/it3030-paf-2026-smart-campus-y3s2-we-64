@@ -1,7 +1,10 @@
 package com.smartcampus.back_end.service;
 
 import com.smartcampus.back_end.dto.ResourceSummaryDTO;
+import com.smartcampus.back_end.exception.ResourceInUseException;
+import com.smartcampus.back_end.exception.ResourceNotFoundException;
 import com.smartcampus.back_end.model.Resource;
+import com.smartcampus.back_end.repository.BookingRepository;
 import com.smartcampus.back_end.repository.ResourceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +18,9 @@ public class ResourceService {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
 
     public ResourceSummaryDTO getResourceSummary() {
         long total = resourceRepository.count();
@@ -68,6 +74,18 @@ public class ResourceService {
     }
 
     public void deleteResource(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Resource id is required");
+        }
+
+        if (!resourceRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Resource not found: " + id);
+        }
+
+        if (bookingRepository.existsByResourceId(id)) {
+            throw new ResourceInUseException("Cannot delete resource while it has bookings");
+        }
+
         resourceRepository.deleteById(id);
     }
 

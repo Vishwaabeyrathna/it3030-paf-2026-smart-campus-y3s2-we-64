@@ -16,6 +16,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByResourceId(Long resourceId);
 
+        boolean existsByResourceId(Long resourceId);
+
     @Query("""
             select b from Booking b
             where b.resource.id = :resourceId

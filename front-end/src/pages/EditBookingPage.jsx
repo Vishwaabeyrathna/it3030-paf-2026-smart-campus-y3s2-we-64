@@ -146,7 +146,7 @@ export default function EditBookingPage() {
           expectedAttendees: Number(expectedAttendees),
         })
         setBooking(updated)
-        navigate(`/bookings/${booking.id}`)
+        navigate(`/bookings/${booking.id}`, { state: { flash: 'Booking updated successfully.' } })
       } catch (err) {
         setError(err.response?.data?.error ?? 'Failed to update booking.')
       } finally {
@@ -180,7 +180,7 @@ export default function EditBookingPage() {
 
       const updated = await updateBookingStatus(booking.id, payload)
       setBooking(updated)
-      navigate(`/bookings/${booking.id}`)
+      navigate(`/bookings/${booking.id}`, { state: { flash: 'Booking updated successfully.' } })
     } catch (err) {
       setError(err.response?.data?.error ?? 'Failed to update booking.')
     } finally {
