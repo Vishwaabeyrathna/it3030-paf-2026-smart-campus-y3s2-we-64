@@ -99,7 +99,6 @@ export default function MyBookingsPage() {
                   <th className="px-4 py-3 text-left">Purpose</th>
                   <th className="px-4 py-3 text-left">Attendees</th>
                   <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Reason</th>
                   <th className="px-4 py-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -112,7 +111,6 @@ export default function MyBookingsPage() {
                     <td className="px-4 py-3 text-gray-600 max-w-[360px] whitespace-pre-wrap">{b.purpose}</td>
                     <td className="px-4 py-3 text-gray-600">{b.expectedAttendees}</td>
                     <td className="px-4 py-3"><BookingStatusBadge status={b.status} /></td>
-                    <td className="px-4 py-3 text-gray-500">{b.adminReason ?? ''}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <Link
