@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import BookingStatusBadge from '../components/BookingStatusBadge'
 import { getAllBookings, updateBookingStatus } from '../services/bookingService'
@@ -209,8 +210,22 @@ export default function AdminBookingsPage() {
                   <td className="px-4 py-3"><BookingStatusBadge status={b.status} /></td>
                   <td className="px-4 py-3 text-gray-500">{b.adminReason ?? ''}</td>
                   <td className="px-4 py-3">
-                    {b.status === 'PENDING' ? (
-                      <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        to={`/bookings/${b.id}`}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100"
+                      >
+                        View
+                      </Link>
+                      {b.status === 'PENDING' && (
+                        <Link
+                          to={`/bookings/${b.id}/edit`}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+                        >
+                          Edit
+                        </Link>
+                      )}
+                      {b.status === 'PENDING' && (
                         <button
                           onClick={() => onApprove(b.id)}
                           disabled={actionBusyId === b.id}
@@ -218,6 +233,8 @@ export default function AdminBookingsPage() {
                         >
                           {actionBusyId === b.id ? 'Working…' : 'Approve'}
                         </button>
+                      )}
+                      {b.status === 'PENDING' && (
                         <button
                           onClick={() => openReject(b.id)}
                           disabled={actionBusyId === b.id}
@@ -225,10 +242,11 @@ export default function AdminBookingsPage() {
                         >
                           Reject
                         </button>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">—</span>
-                    )}
+                      )}
+                      {b.status !== 'PENDING' && (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
