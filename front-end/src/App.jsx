@@ -14,6 +14,8 @@ import ResourceAvailabilityPage from './pages/ResourceAvailabilityPage'
 import CreateBookingPage from './pages/CreateBookingPage'
 import MyBookingsPage from './pages/MyBookingsPage'
 import AdminBookingsPage from './pages/AdminBookingsPage'
+import BookingDetailsPage from './pages/BookingDetailsPage'
+import EditBookingPage from './pages/EditBookingPage'
 import ResourceDetailPage from './pages/ResourceDetailPage'
 import UserResourcePage from './pages/UserResourcePage'
 import EditResourcePage from './pages/EditResourcePage'
@@ -80,6 +82,16 @@ function App() {
       <Route path="/bookings/my" element={
         <ProtectedRoute roles={['USER', 'ADMIN', 'TECHNICIAN']}>
           <MyBookingsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/bookings/:id" element={
+        <ProtectedRoute roles={['USER', 'ADMIN']}>
+          <BookingDetailsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/bookings/:id/edit" element={
+        <ProtectedRoute roles={['USER', 'ADMIN']}>
+          <EditBookingPage />
         </ProtectedRoute>
       } />
       <Route path="/admin/bookings" element={
