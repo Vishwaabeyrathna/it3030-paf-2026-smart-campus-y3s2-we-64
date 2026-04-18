@@ -4,7 +4,7 @@ import BookingStatusBadge from '../components/BookingStatusBadge'
 import { deleteBooking, getMyBookings, updateBookingStatus } from '../services/bookingService'
 import RoleSidebarLayout from '../components/RoleSidebarLayout'
 
-const STATUS_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']
+const STATUS_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'CHECKED_IN', 'REJECTED', 'CANCELLED']
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([])

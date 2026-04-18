@@ -9,7 +9,7 @@ function authHeaders() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` }
 }
 
-const STATUS_OPTIONS = ['', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']
+const STATUS_OPTIONS = ['', 'PENDING', 'APPROVED', 'CHECKED_IN', 'REJECTED', 'CANCELLED']
 
 export default function AdminBookingsPage() {
   const [resources, setResources] = useState([])

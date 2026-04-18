@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import BookingStatusBadge from '../components/BookingStatusBadge'
-import { getBookingById } from '../services/bookingService'
+import { QRCode } from 'react-qr-code'
+import { getBookingById, getBookingCheckInToken } from '../services/bookingService'
 import { useAuth } from '../context/AuthContext'
 import RoleSidebarLayout from '../components/RoleSidebarLayout'
 
@@ -24,6 +25,8 @@ export default function BookingDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [flash, setFlash] = useState('')
+
+  const [qr, setQr] = useState({ token: '', expiresAt: '', loading: false, error: '' })
 
   useEffect(() => {
     const message = location.state?.flash
@@ -52,6 +55,19 @@ export default function BookingDetailsPage() {
       mounted = false
     }
   }, [id])
+
+  const canShowQr = booking?.status === 'APPROVED' && !booking?.checkedInAt
+
+  const handleLoadQr = async () => {
+    if (!booking?.id) return
+    setQr({ token: '', expiresAt: '', loading: true, error: '' })
+    try {
+      const data = await getBookingCheckInToken(booking.id)
+      setQr({ token: data?.token ?? '', expiresAt: data?.expiresAt ?? '', loading: false, error: '' })
+    } catch (err) {
+      setQr({ token: '', expiresAt: '', loading: false, error: err.response?.data?.error ?? 'Failed to generate QR code.' })
+    }
+  }
 
   return (
     <RoleSidebarLayout>
@@ -134,7 +150,48 @@ export default function BookingDetailsPage() {
                 <Field label="Booking ID">{booking.id}</Field>
                 <Field label="Created At">{booking.createdAt ?? '—'}</Field>
                 <Field label="Updated At">{booking.updatedAt ?? '—'}</Field>
+                <Field label="Checked In At">{booking.checkedInAt ?? '—'}</Field>
               </div>
+            </div>
+
+            <div className="bg-white border border-gray-100 rounded-2xl p-5">
+              <h2 className="text-sm font-semibold text-gray-800">QR Check-In</h2>
+              {!canShowQr && (
+                <p className="mt-2 text-sm text-gray-500">
+                  {booking?.checkedInAt ? 'This booking is already checked in.' : 'QR is available after approval.'}
+                </p>
+              )}
+
+              {canShowQr && (
+                <div className="mt-3">
+                  {!qr.token ? (
+                    <button
+                      onClick={handleLoadQr}
+                      disabled={qr.loading}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {qr.loading ? 'Generating…' : 'Show QR Code'}
+                    </button>
+                  ) : (
+                    <div className="mt-3 flex flex-col items-center">
+                      <div className="bg-white p-3 rounded-xl border border-gray-200">
+                        <QRCode value={qr.token} size={160} />
+                      </div>
+                      <p className="mt-3 text-xs text-gray-500 text-center">
+                        Show this QR at check-in. {qr.expiresAt ? `Expires at: ${qr.expiresAt}` : ''}
+                      </p>
+                      <button
+                        onClick={handleLoadQr}
+                        className="mt-3 text-xs font-bold uppercase tracking-widest text-emerald-700/80 hover:text-emerald-800"
+                      >
+                        Regenerate
+                      </button>
+                    </div>
+                  )}
+
+                  {qr.error && <p className="mt-3 text-sm text-red-600">{qr.error}</p>}
+                </div>
+              )}
             </div>
           </div>
         )}
