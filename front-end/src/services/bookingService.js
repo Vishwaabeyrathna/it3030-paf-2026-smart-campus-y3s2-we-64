@@ -54,6 +54,13 @@ export async function updateBookingStatus(id, statusData) {
   return res.data
 }
 
+export async function updateBooking(id, bookingData) {
+  const res = await axios.put(`${API_BASE}/api/bookings/${id}`, bookingData, {
+    headers: authHeaders(),
+  })
+  return res.data
+}
+
 export async function deleteBooking(id) {
   await axios.delete(`${API_BASE}/api/bookings/${id}`, {
     headers: authHeaders(),
