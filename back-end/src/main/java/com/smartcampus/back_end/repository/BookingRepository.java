@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
@@ -22,7 +23,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             select b from Booking b
             where b.resource.id = :resourceId
               and b.date = :date
-              and b.status in (com.smartcampus.back_end.model.BookingStatus.PENDING, com.smartcampus.back_end.model.BookingStatus.APPROVED)
+                                                        and b.status in (
+                                                                com.smartcampus.back_end.model.BookingStatus.PENDING,
+                                                                com.smartcampus.back_end.model.BookingStatus.APPROVED,
+                                                                com.smartcampus.back_end.model.BookingStatus.CHECKED_IN
+                                                        )
               and b.startTime < :endTime
               and b.endTime > :startTime
             """)
@@ -48,12 +53,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     long countByStatus(BookingStatus status);
 
-    @Query("select b.resource.name, count(b) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED group by b.resource.name order by count(b) desc")
+        Optional<Booking> findByCheckInTokenHash(String checkInTokenHash);
+
+        @Query("select b.resource.name, count(b) from Booking b where b.status in (com.smartcampus.back_end.model.BookingStatus.APPROVED, com.smartcampus.back_end.model.BookingStatus.CHECKED_IN) group by b.resource.name order by count(b) desc")
     List<Object[]> findResourceBookingCounts();
 
-    @Query("select HOUR(b.startTime), count(b) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED group by HOUR(b.startTime) order by count(b) desc")
+        @Query("select HOUR(b.startTime), count(b) from Booking b where b.status in (com.smartcampus.back_end.model.BookingStatus.APPROVED, com.smartcampus.back_end.model.BookingStatus.CHECKED_IN) group by HOUR(b.startTime) order by count(b) desc")
     List<Object[]> findBookingCountsByHour();
 
-    @Query("select count(distinct b.resource.id) from Booking b where b.status = com.smartcampus.back_end.model.BookingStatus.APPROVED")
+        @Query("select count(distinct b.resource.id) from Booking b where b.status in (com.smartcampus.back_end.model.BookingStatus.APPROVED, com.smartcampus.back_end.model.BookingStatus.CHECKED_IN)")
     long countDistinctResourceId();
 }
