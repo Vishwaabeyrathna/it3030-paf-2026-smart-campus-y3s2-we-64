@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { createBooking } from '../services/bookingService'
 
@@ -16,6 +16,7 @@ function minutesFromHHMM(value) {
 
 export default function CreateBookingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [resources, setResources] = useState([])
   const [loadingResources, setLoadingResources] = useState(true)
@@ -31,6 +32,15 @@ export default function CreateBookingPage() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    const preselected = searchParams.get('resourceId')
+    if (preselected) {
+      setResourceId(preselected)
+    }
+    // only on first render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     setLoadingResources(true)
