@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import BookingStatusBadge from '../components/BookingStatusBadge'
 import { getAllBookings, updateBookingStatus } from '../services/bookingService'
+import RoleSidebarLayout from '../components/RoleSidebarLayout'
 
 function authHeaders() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -108,188 +109,190 @@ export default function AdminBookingsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">All Bookings (Admin)</h1>
-          <p className="text-sm text-gray-500 mt-1">Review, approve, and reject booking requests.</p>
-        </div>
-        <button
-          onClick={loadBookings}
-          className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-        >
-          Refresh
-        </button>
-      </div>
-
-      <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <RoleSidebarLayout>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
           <div>
-            <label className="block text-xs text-gray-600">Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-            >
-              <option value="">All</option>
-              {STATUS_OPTIONS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <h1 className="text-2xl font-bold text-gray-800">All Bookings (Admin)</h1>
+            <p className="text-sm text-gray-500 mt-1">Review, approve, and reject booking requests.</p>
           </div>
-
-          <div>
-            <label className="block text-xs text-gray-600">Date</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-gray-600">Resource</label>
-            <select
-              value={resourceId}
-              onChange={(e) => setResourceId(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
-              disabled={loadingResources}
-            >
-              <option value="">{loadingResources ? 'Loading…' : 'All resources'}</option>
-              {resourceOptions.map(r => (
-                <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-end gap-2">
-            <button
-              onClick={loadBookings}
-              className="w-full px-4 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700"
-            >
-              Apply Filters
-            </button>
-            <button
-              onClick={() => { setStatus(''); setDate(''); setResourceId(''); }}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-            >
-              Clear
-            </button>
-          </div>
+          <button
+            onClick={loadBookings}
+            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+          >
+            Refresh
+          </button>
         </div>
 
-        {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
-      </div>
-
-      {loading && <p className="text-gray-400 text-sm mt-6">Loading bookings…</p>}
-
-      {!loading && !error && (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-100 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
-              <tr>
-                <th className="px-4 py-3 text-left">User</th>
-                <th className="px-4 py-3 text-left">Resource</th>
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Time</th>
-                <th className="px-4 py-3 text-left">Purpose</th>
-                <th className="px-4 py-3 text-left">Attendees</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Reason</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {bookings.map(b => (
-                <tr key={b.id} className="hover:bg-gray-50 align-top">
-                  <td className="px-4 py-3 font-medium text-gray-800">{b.userName}</td>
-                  <td className="px-4 py-3 text-gray-700">{b.resourceName}</td>
-                  <td className="px-4 py-3 text-gray-600">{b.date}</td>
-                  <td className="px-4 py-3 text-gray-600">{b.startTime} – {b.endTime}</td>
-                  <td className="px-4 py-3 text-gray-600 max-w-[380px] whitespace-pre-wrap">{b.purpose}</td>
-                  <td className="px-4 py-3 text-gray-600">{b.expectedAttendees}</td>
-                  <td className="px-4 py-3"><BookingStatusBadge status={b.status} /></td>
-                  <td className="px-4 py-3 text-gray-500">{b.adminReason ?? ''}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        to={`/bookings/${b.id}`}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100"
-                      >
-                        View
-                      </Link>
-                      {b.status === 'PENDING' && (
-                        <Link
-                          to={`/bookings/${b.id}/edit`}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
-                        >
-                          Edit
-                        </Link>
-                      )}
-                      {b.status === 'PENDING' && (
-                        <button
-                          onClick={() => onApprove(b.id)}
-                          disabled={actionBusyId === b.id}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
-                        >
-                          {actionBusyId === b.id ? 'Working…' : 'Approve'}
-                        </button>
-                      )}
-                      {b.status === 'PENDING' && (
-                        <button
-                          onClick={() => openReject(b.id)}
-                          disabled={actionBusyId === b.id}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
-                        >
-                          Reject
-                        </button>
-                      )}
-                      {b.status !== 'PENDING' && (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {bookings.length === 0 && (
-            <p className="text-center text-gray-400 text-sm py-8">No bookings found.</p>
-          )}
-        </div>
-      )}
-
-      {rejectModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="text-lg font-semibold text-gray-800">Reject Booking</h3>
-            <p className="text-sm text-gray-500 mt-1">Please provide a reason for rejection.</p>
-
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              rows={4}
-              className="mt-4 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
-              placeholder="Reason…"
-            />
-
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={closeReject}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+        <div className="mt-6 bg-white border border-gray-100 rounded-2xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
               >
-                Cancel
+                <option value="">All</option>
+                {STATUS_OPTIONS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-600">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-600">Resource</label>
+              <select
+                value={resourceId}
+                onChange={(e) => setResourceId(e.target.value)}
+                className="mt-1 w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
+                disabled={loadingResources}
+              >
+                <option value="">{loadingResources ? 'Loading…' : 'All resources'}</option>
+                {resourceOptions.map(r => (
+                  <option key={r.id} value={r.id}>{r.name} ({r.type})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-end gap-2">
+              <button
+                onClick={loadBookings}
+                className="w-full px-4 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700"
+              >
+                Apply Filters
               </button>
               <button
-                onClick={onReject}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700"
+                onClick={() => { setStatus(''); setDate(''); setResourceId(''); }}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
               >
-                Submit Rejection
+                Clear
               </button>
             </div>
           </div>
+
+          {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
         </div>
-      )}
-    </div>
+
+        {loading && <p className="text-gray-400 text-sm mt-6">Loading bookings…</p>}
+
+        {!loading && !error && (
+          <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-100 bg-white">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+                <tr>
+                  <th className="px-4 py-3 text-left">User</th>
+                  <th className="px-4 py-3 text-left">Resource</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Time</th>
+                  <th className="px-4 py-3 text-left">Purpose</th>
+                  <th className="px-4 py-3 text-left">Attendees</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Reason</th>
+                  <th className="px-4 py-3 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {bookings.map(b => (
+                  <tr key={b.id} className="hover:bg-gray-50 align-top">
+                    <td className="px-4 py-3 font-medium text-gray-800">{b.userName}</td>
+                    <td className="px-4 py-3 text-gray-700">{b.resourceName}</td>
+                    <td className="px-4 py-3 text-gray-600">{b.date}</td>
+                    <td className="px-4 py-3 text-gray-600">{b.startTime} – {b.endTime}</td>
+                    <td className="px-4 py-3 text-gray-600 max-w-[380px] whitespace-pre-wrap">{b.purpose}</td>
+                    <td className="px-4 py-3 text-gray-600">{b.expectedAttendees}</td>
+                    <td className="px-4 py-3"><BookingStatusBadge status={b.status} /></td>
+                    <td className="px-4 py-3 text-gray-500">{b.adminReason ?? ''}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          to={`/bookings/${b.id}`}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100"
+                        >
+                          View
+                        </Link>
+                        {b.status === 'PENDING' && (
+                          <Link
+                            to={`/bookings/${b.id}/edit`}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+                          >
+                            Edit
+                          </Link>
+                        )}
+                        {b.status === 'PENDING' && (
+                          <button
+                            onClick={() => onApprove(b.id)}
+                            disabled={actionBusyId === b.id}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+                          >
+                            {actionBusyId === b.id ? 'Working…' : 'Approve'}
+                          </button>
+                        )}
+                        {b.status === 'PENDING' && (
+                          <button
+                            onClick={() => openReject(b.id)}
+                            disabled={actionBusyId === b.id}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                          >
+                            Reject
+                          </button>
+                        )}
+                        {b.status !== 'PENDING' && (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {bookings.length === 0 && (
+              <p className="text-center text-gray-400 text-sm py-8">No bookings found.</p>
+            )}
+          </div>
+        )}
+
+        {rejectModalOpen && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-5">
+              <h3 className="text-lg font-semibold text-gray-800">Reject Booking</h3>
+              <p className="text-sm text-gray-500 mt-1">Please provide a reason for rejection.</p>
+
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={4}
+                className="mt-4 w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                placeholder="Reason…"
+              />
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={closeReject}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onReject}
+                  className="px-4 py-2 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700"
+                >
+                  Submit Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </RoleSidebarLayout>
   )
 }
