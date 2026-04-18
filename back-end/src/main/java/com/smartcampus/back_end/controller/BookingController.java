@@ -1,6 +1,8 @@
 package com.smartcampus.back_end.controller;
 
 import com.smartcampus.back_end.dto.BookingAnalyticsDTO;
+import com.smartcampus.back_end.dto.BookingCheckInRequestDTO;
+import com.smartcampus.back_end.dto.BookingCheckInTokenResponseDTO;
 import com.smartcampus.back_end.dto.BookingRequestDTO;
 import com.smartcampus.back_end.dto.BookingResponseDTO;
 import com.smartcampus.back_end.dto.BookingStatusUpdateDTO;
@@ -116,5 +118,22 @@ public class BookingController {
 
         bookingService.deleteBooking(id, email);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/checkin-token")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    public ResponseEntity<BookingCheckInTokenResponseDTO> generateCheckInToken(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String email) {
+
+        return ResponseEntity.ok(bookingService.generateCheckInToken(id, email));
+    }
+
+    @PostMapping("/checkin")
+    @PreAuthorize("hasAnyRole('ADMIN','TECHNICIAN')")
+    public ResponseEntity<BookingResponseDTO> checkInByToken(
+            @Valid @RequestBody BookingCheckInRequestDTO dto) {
+
+        return ResponseEntity.ok(bookingService.checkInByToken(dto.getToken()));
     }
 }
