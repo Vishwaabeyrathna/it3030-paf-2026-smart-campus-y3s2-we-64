@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import ticketService from '../services/ticketService'
 import TicketDetailModal from '../components/TicketDetailModal'
@@ -141,9 +141,17 @@ function NewTicketForm({ onSuccess }) {
 export default function UserDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [tickets, setTickets]               = useState([])
   const [selectedTicket, setSelectedTicket] = useState(null)
   const [activeTab, setActiveTab]           = useState('overview')
+
+  useEffect(() => {
+    const tab = (searchParams.get('tab') ?? '').toLowerCase()
+    if (tab === 'overview' || tab === 'tickets' || tab === 'new') {
+      setActiveTab(tab)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     ticketService.getMyTickets().then(setTickets).catch(console.error)
