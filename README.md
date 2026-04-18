@@ -116,7 +116,7 @@ Make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Vishwaabeyrathna/it3030-paf-2026-smart-campus-operations.git
+git clone https://github.com/Vishwaabeyrathna/it3030-paf-2026-smart-campus-y3s2-we-64.git
 cd it3030-paf-2026-smart-campus-operations
 ```
 
@@ -329,4 +329,4 @@ copy(localStorage.getItem('token'))
 
 ---
 
-*IT3030 — Programming and Frameworks | Group 229 | 2026*
+*IT3030 — Programming and Frameworks | Group Y3S2_WE_64 | 2026*
