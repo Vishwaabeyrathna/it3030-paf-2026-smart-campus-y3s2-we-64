@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+    include: ['html5-qrcode'],
+  },
   server: {
     proxy: {
       '/api': {
