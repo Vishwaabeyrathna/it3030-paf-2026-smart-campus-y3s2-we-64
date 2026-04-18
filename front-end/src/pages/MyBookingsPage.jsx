@@ -113,6 +113,20 @@ export default function MyBookingsPage() {
                   <td className="px-4 py-3 text-gray-500">{b.adminReason ?? ''}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
+                      <Link
+                        to={`/bookings/${b.id}`}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100"
+                      >
+                        View
+                      </Link>
+                      {b.status === 'PENDING' && (
+                        <Link
+                          to={`/bookings/${b.id}/edit`}
+                          className="text-xs px-3 py-1.5 rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+                        >
+                          Edit
+                        </Link>
+                      )}
                       {b.status === 'APPROVED' && (
                         <button
                           onClick={() => onCancel(b.id)}
