@@ -66,3 +66,17 @@ export async function deleteBooking(id) {
     headers: authHeaders(),
   })
 }
+
+export async function getBookingCheckInToken(id) {
+  const res = await axios.post(`${API_BASE}/api/bookings/${id}/checkin-token`, null, {
+    headers: authHeaders(),
+  })
+  return res.data
+}
+
+export async function checkInBookingByToken(token) {
+  const res = await axios.post(`${API_BASE}/api/bookings/checkin`, { token }, {
+    headers: authHeaders(),
+  })
+  return res.data
+}
