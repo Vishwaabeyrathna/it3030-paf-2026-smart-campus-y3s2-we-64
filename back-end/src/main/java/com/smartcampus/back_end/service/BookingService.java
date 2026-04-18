@@ -11,8 +11,17 @@ import com.smartcampus.back_end.repository.BookingRepository;
 import com.smartcampus.back_end.repository.ResourceRepository;
 import com.smartcampus.back_end.repository.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.HexFormat;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -26,6 +35,11 @@ public class BookingService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationService notificationService;
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Value("${app.checkin.hmacSecret:dev-secret-change-me}")
+    private String checkInHmacSecret;
 
     public BookingService(BookingRepository bookingRepository,
                           UserRepository userRepository,
@@ -97,7 +111,7 @@ public class BookingService {
             try {
                 statusEnum = BookingStatus.valueOf(status.trim().toUpperCase());
             } catch (IllegalArgumentException ex) {
-                throw new IllegalArgumentException("Invalid status. Valid values: PENDING, APPROVED, REJECTED, CANCELLED");
+                throw new IllegalArgumentException("Invalid status. Valid values: PENDING, APPROVED, CHECKED_IN, REJECTED, CANCELLED");
             }
         }
 
@@ -108,7 +122,8 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public BookingAnalyticsDTO getBookingAnalytics() {
-        long approvedBookings = bookingRepository.countByStatus(BookingStatus.APPROVED);
+        long approvedBookings = bookingRepository.countByStatus(BookingStatus.APPROVED)
+            + bookingRepository.countByStatus(BookingStatus.CHECKED_IN);
         long pendingBookings = bookingRepository.countByStatus(BookingStatus.PENDING);
         long uniqueResourcesBooked = bookingRepository.countDistinctResourceId();
 
@@ -170,6 +185,101 @@ public class BookingService {
         }
 
         throw new AccessDeniedException("Only ADMIN or USER can update booking status");
+    }
+
+    @Transactional
+    public com.smartcampus.back_end.dto.BookingCheckInTokenResponseDTO generateCheckInToken(Long bookingId, String userEmail) {
+        Booking booking = getBookingEntityById(bookingId);
+
+        if (userEmail == null || userEmail.isBlank()) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+
+        if (booking.getUser() == null || booking.getUser().getId() == null) {
+            throw new IllegalStateException("Booking is missing user information");
+        }
+        if (booking.getResource() == null || booking.getResource().getId() == null) {
+            throw new IllegalStateException("Booking is missing resource information");
+        }
+        if (booking.getDate() == null || booking.getStartTime() == null || booking.getEndTime() == null) {
+            throw new IllegalStateException("Booking is missing date/time information");
+        }
+
+        User actor = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (actor.getRole() == Role.USER) {
+            if (booking.getUser() == null || booking.getUser().getId() == null || !booking.getUser().getId().equals(actor.getId())) {
+                throw new AccessDeniedException("You can only generate a check-in QR for your own booking");
+            }
+        } else if (actor.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Only USER or ADMIN can generate a check-in token");
+        }
+
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            throw new IllegalStateException("Only APPROVED bookings can have a check-in QR");
+        }
+        if (booking.getCheckedInAt() != null || booking.getStatus() == BookingStatus.CHECKED_IN) {
+            throw new IllegalStateException("This booking is already checked in");
+        }
+
+        LocalDateTime bookingEnd = LocalDateTime.of(booking.getDate(), booking.getEndTime());
+        if (LocalDateTime.now().isAfter(bookingEnd)) {
+            throw new IllegalStateException("Check-in QR cannot be generated after the booking has ended");
+        }
+
+        String token = generateToken();
+        String tokenHash = hmacSha256Hex(token);
+
+        booking.setCheckInTokenHash(tokenHash);
+        booking.setCheckInTokenExpiresAt(bookingEnd);
+        bookingRepository.save(booking);
+
+        var resp = new com.smartcampus.back_end.dto.BookingCheckInTokenResponseDTO();
+        resp.setBookingId(booking.getId());
+        resp.setToken(token);
+        resp.setExpiresAt(booking.getCheckInTokenExpiresAt());
+        return resp;
+    }
+
+    @Transactional
+    public BookingResponseDTO checkInByToken(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) {
+            throw new IllegalArgumentException("token is required");
+        }
+
+        String tokenHash = hmacSha256Hex(rawToken.trim());
+        Booking booking = bookingRepository.findByCheckInTokenHash(tokenHash)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or unknown check-in token"));
+
+        if (booking.getDate() == null || booking.getStartTime() == null || booking.getEndTime() == null) {
+            throw new IllegalStateException("Booking is missing date/time information");
+        }
+
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            throw new IllegalStateException("Only APPROVED bookings can be checked in");
+        }
+        if (booking.getCheckedInAt() != null) {
+            throw new IllegalStateException("Booking already checked in");
+        }
+        if (booking.getCheckInTokenExpiresAt() == null || LocalDateTime.now().isAfter(booking.getCheckInTokenExpiresAt())) {
+            throw new IllegalStateException("Check-in token expired");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime start = LocalDateTime.of(booking.getDate(), booking.getStartTime());
+        LocalDateTime end = LocalDateTime.of(booking.getDate(), booking.getEndTime());
+        if (now.isBefore(start) || now.isAfter(end)) {
+            throw new IllegalStateException("Check-in allowed only during the booking time window");
+        }
+
+        booking.setCheckedInAt(now);
+        booking.setStatus(BookingStatus.CHECKED_IN);
+        booking.setCheckInTokenHash(null);
+        booking.setCheckInTokenExpiresAt(null);
+
+        Booking saved = bookingRepository.save(booking);
+        return toResponseDTO(saved);
     }
 
     @Transactional
@@ -278,6 +388,9 @@ public class BookingService {
             }
             booking.setStatus(BookingStatus.REJECTED);
             booking.setAdminReason(reason.trim());
+            booking.setCheckInTokenHash(null);
+            booking.setCheckInTokenExpiresAt(null);
+            booking.setCheckedInAt(null);
             Booking rejectedBooking = bookingRepository.save(booking);
             notificationService.notifyUserBookingRejected(rejectedBooking);
             return toResponseDTO(rejectedBooking);
@@ -298,6 +411,9 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCheckInTokenHash(null);
+        booking.setCheckInTokenExpiresAt(null);
+        booking.setCheckedInAt(null);
         if (dto.getAdminReason() != null && !dto.getAdminReason().isBlank()) {
             booking.setAdminReason(dto.getAdminReason().trim());
         }
@@ -344,6 +460,27 @@ public class BookingService {
 
         dto.setCreatedAt(booking.getCreatedAt());
         dto.setUpdatedAt(booking.getUpdatedAt());
+        dto.setCheckedInAt(booking.getCheckedInAt());
         return dto;
+    }
+
+    private String generateToken() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private String hmacSha256Hex(String input) {
+        if (checkInHmacSecret == null || checkInHmacSecret.isBlank() || "dev-secret-change-me".equals(checkInHmacSecret)) {
+            // Still works for local dev, but should be overridden in real environments
+        }
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(checkInHmacSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] out = mac.doFinal(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(out);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to hash check-in token", e);
+        }
     }
 }
