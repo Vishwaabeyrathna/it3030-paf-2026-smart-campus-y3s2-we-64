@@ -7,6 +7,9 @@ spring.datasource.password=YOUR_DB_PASSWORD
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
 spring.jpa.hibernate.ddl-auto=update
+
+# Check-in QR (override in real environments)
+app.checkin.hmacSecret=gffuygih
 spring.jpa.show-sql=false
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
