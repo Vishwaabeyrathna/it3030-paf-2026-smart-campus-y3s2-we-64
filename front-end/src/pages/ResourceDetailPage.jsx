@@ -139,7 +139,11 @@ const ResourceDetailPage = () => {
                   </div>
 
                   <div className="mt-auto flex flex-wrap gap-4">
-                    <button disabled={!isAvailable} className="flex-1 py-4 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3">
+                    <button
+                      disabled={!isAvailable}
+                      onClick={() => navigate(`/bookings/create?resourceId=${resource.id ?? id}`)}
+                      className="flex-1 py-4 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:cursor-not-allowed text-white rounded-2xl font-bold transition-all shadow-xl shadow-blue-500/20 active:scale-[0.98] flex items-center justify-center gap-3"
+                    >
                       <CalendarCheck className="w-5 h-5" />
                       {isAvailable ? 'Book This Resource' : 'Waitlist Access'}
                     </button>
