@@ -98,6 +98,16 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.updateBookingStatus(id, dto, email));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<BookingResponseDTO> updateBooking(
+            @PathVariable Long id,
+            @Valid @RequestBody BookingRequestDTO dto,
+            @AuthenticationPrincipal String email) {
+
+        return ResponseEntity.ok(bookingService.updateBooking(id, dto, email));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void> deleteBooking(
