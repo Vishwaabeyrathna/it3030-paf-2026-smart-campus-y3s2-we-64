@@ -173,6 +173,57 @@ public class BookingService {
     }
 
     @Transactional
+    public BookingResponseDTO updateBooking(Long id, BookingRequestDTO dto, String userEmail) {
+        Booking booking = getBookingEntityById(id);
+
+        User actor = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (actor.getRole() != Role.USER) {
+            throw new AccessDeniedException("Only USER can edit booking details");
+        }
+
+        if (booking.getUser() == null || booking.getUser().getId() == null
+                || !booking.getUser().getId().equals(actor.getId())) {
+            throw new AccessDeniedException("You can only edit your own bookings");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new IllegalStateException("Only PENDING bookings can be edited");
+        }
+
+        Resource resource = resourceRepository.findById(dto.getResourceId())
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found: " + dto.getResourceId()));
+
+        validateTimes(dto.getDate(), dto.getStartTime(), dto.getEndTime());
+
+        if (dto.getExpectedAttendees() != null && resource.getCapacity() != null
+                && dto.getExpectedAttendees() > resource.getCapacity()) {
+            throw new IllegalArgumentException("expectedAttendees cannot exceed resource capacity (" + resource.getCapacity() + ")");
+        }
+
+        List<Booking> overlaps = bookingRepository.findOverlappingBookings(
+                resource.getId(), dto.getDate(), dto.getStartTime(), dto.getEndTime()
+        );
+
+        boolean hasOtherOverlap = overlaps.stream().anyMatch(b -> !b.getId().equals(booking.getId()));
+        if (hasOtherOverlap) {
+            throw new BookingConflictException("Booking conflict: resource is already booked for the selected time window");
+        }
+
+        booking.setResource(resource);
+        booking.setDate(dto.getDate());
+        booking.setStartTime(dto.getStartTime());
+        booking.setEndTime(dto.getEndTime());
+        booking.setPurpose(dto.getPurpose().trim());
+        booking.setExpectedAttendees(dto.getExpectedAttendees());
+
+        Booking saved = bookingRepository.save(booking);
+        notificationService.notifyAdminsBookingUpdated(saved);
+        return toResponseDTO(saved);
+    }
+
+    @Transactional
     public void deleteBooking(Long id, String userEmail) {
         Booking booking = getBookingEntityById(id);
 
