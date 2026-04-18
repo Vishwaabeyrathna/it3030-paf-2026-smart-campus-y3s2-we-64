@@ -4,6 +4,7 @@ import axios from 'axios'
 import BookingStatusBadge from '../components/BookingStatusBadge'
 import { deleteBooking, getBookingById, updateBooking, updateBookingStatus } from '../services/bookingService'
 import { useAuth } from '../context/AuthContext'
+import RoleSidebarLayout from '../components/RoleSidebarLayout'
 
 function authHeaders() {
   return { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -206,44 +207,45 @@ export default function EditBookingPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Edit Booking</h1>
-          <p className="text-sm text-gray-500 mt-1">Update booking details or status.</p>
+    <RoleSidebarLayout>
+      <div className="max-w-5xl mx-auto">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Edit Booking</h1>
+            <p className="text-sm text-gray-500 mt-1">Update booking details or status.</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              Back
+            </button>
+            <Link
+              to={`/bookings/${id}`}
+              className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
+            >
+              View
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            Back
-          </button>
-          <Link
-            to={`/bookings/${id}`}
-            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            View
-          </Link>
-        </div>
-      </div>
 
-      {loading && <p className="text-gray-400 text-sm mt-6">Loading booking…</p>}
-      {!loading && error && <p className="text-red-600 text-sm mt-6">{error}</p>}
+        {loading && <p className="text-gray-400 text-sm mt-6">Loading booking…</p>}
+        {!loading && error && <p className="text-red-600 text-sm mt-6">{error}</p>}
 
-      {!loading && !error && booking && (
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm text-gray-500">Resource</p>
-                <p className="text-lg font-semibold text-gray-800">{booking.resourceName}</p>
-                <p className="text-sm text-gray-500 mt-1">{booking.date} · {booking.startTime} – {booking.endTime}</p>
+        {!loading && !error && booking && (
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm text-gray-500">Resource</p>
+                  <p className="text-lg font-semibold text-gray-800">{booking.resourceName}</p>
+                  <p className="text-sm text-gray-500 mt-1">{booking.date} · {booking.startTime} – {booking.endTime}</p>
+                </div>
+                <BookingStatusBadge status={booking.status} />
               </div>
-              <BookingStatusBadge status={booking.status} />
-            </div>
 
-            <form onSubmit={onSave} className="mt-6 space-y-4">
+              <form onSubmit={onSave} className="mt-6 space-y-4">
               {mode === 'ADMIN' && (
                 <>
                   <div>
@@ -394,20 +396,21 @@ export default function EditBookingPage() {
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
-            </form>
-          </div>
+              </form>
+            </div>
 
-          <div className="bg-white border border-gray-100 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-gray-800">Quick Info</h2>
-            <div className="mt-4 space-y-3 text-sm text-gray-700">
-              <p><span className="text-gray-500">Booking ID:</span> {booking.id}</p>
-              <p><span className="text-gray-500">Attendees:</span> {booking.expectedAttendees ?? '—'}</p>
-              <p><span className="text-gray-500">Purpose:</span> {booking.purpose || '—'}</p>
-              <p><span className="text-gray-500">Admin Reason:</span> {booking.adminReason || '—'}</p>
+            <div className="bg-white border border-gray-100 rounded-2xl p-5">
+              <h2 className="text-sm font-semibold text-gray-800">Quick Info</h2>
+              <div className="mt-4 space-y-3 text-sm text-gray-700">
+                <p><span className="text-gray-500">Booking ID:</span> {booking.id}</p>
+                <p><span className="text-gray-500">Attendees:</span> {booking.expectedAttendees ?? '—'}</p>
+                <p><span className="text-gray-500">Purpose:</span> {booking.purpose || '—'}</p>
+                <p><span className="text-gray-500">Admin Reason:</span> {booking.adminReason || '—'}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </RoleSidebarLayout>
   )
 }
