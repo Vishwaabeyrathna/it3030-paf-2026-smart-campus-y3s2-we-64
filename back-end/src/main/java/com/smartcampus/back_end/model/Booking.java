@@ -50,6 +50,13 @@ public class Booking {
     @Column(length = 1000)
     private String adminReason;
 
+    @Column(length = 64, unique = true)
+    private String checkInTokenHash;
+
+    private LocalDateTime checkInTokenExpiresAt;
+
+    private LocalDateTime checkedInAt;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
